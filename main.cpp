@@ -4,6 +4,7 @@
 #include <stdlib.h>
 #include <time.h>
 #include <sys/time.h>
+#include "renderer.h"
 
 void update_screen();
 
@@ -19,7 +20,6 @@ Window win;
 GC gc;
 
 int main(){
-
   dsp = XOpenDisplay( NULL );
   if( !dsp ){ return 1; }
 
@@ -115,18 +115,24 @@ int main(){
 
 void update_screen()
 {
-  XClearWindow(dsp, win);
-
-  XDrawLine(dsp, win, gc, 0, YRES/2, XRES-1, YRES/2); //from-to
-  XDrawLine(dsp, win, gc, XRES/2, 0, XRES/2, YRES-1); //from-to
+  const static Renderer r(
+    XRES,
+    YRES,
+    [](int x, int y, int color)
+    {
+      XSetForeground(dsp,gc,color);
+      XDrawPoint(dsp, win, gc, x, y);
+    },
+    []()
+    {
+      XClearWindow(dsp, win);
+    }
+  );
+  r.clear();
 
   long i;
   for (i=0; i<NPTS; i++) {
-    XSetForeground(dsp,gc,0xbb00ff);
-    
-    XDrawPoint(dsp, win, gc, rand()%XRES, rand()%YRES);
-    //pts[i].x = rand()%XRES;
-    //pts[i].y = rand()%YRES;
+    r.setPixel(rand()%XRES, rand()%YRES, 0xbb00ff);
   }
 }
   
