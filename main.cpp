@@ -1,138 +1,72 @@
-//----- x1.c simple xwindows example -----
-
-#include <X11/Xlib.h> // must precede most other headers!
+#include <MiniFB.h>
+#include "renderer.hpp"
+#include <stdio.h>
 #include <stdlib.h>
-#include <time.h>
-#include <sys/time.h>
-#include "renderer.h"
+#include <cstdint>
 
-void update_screen();
+static uint32_t g_width = 800;
+static uint32_t g_height = 600;
+static uint32_t *g_buffer = 0x0;
 
-int XRES=500;
-int YRES=500;
-int NPTS=25000;
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-//Need this array if we're plotting all at once using XDrawPoints
-//XPoint pts[NPTS];
+void resize(struct mfb_window *window, int width, int height)
+{
+  (void)window;
+  g_width = width;
+  g_height = height;
+  g_buffer = (uint32_t *)realloc(g_buffer, g_width * g_height * 4);
+}
 
-Display *dsp;
-Window win;
-GC gc;
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-int main(){
-  dsp = XOpenDisplay( NULL );
-  if( !dsp ){ return 1; }
+int main()
+{
 
-  int screen = DefaultScreen(dsp);
-  unsigned int white = WhitePixel(dsp,screen);
-  unsigned int black = BlackPixel(dsp,screen);
+  struct mfb_window *window = mfb_open_ex("Renderer", g_width, g_height, WF_RESIZABLE);
+  if (!window)
+    return 0;
 
-  win = XCreateSimpleWindow(dsp,
-                            DefaultRootWindow(dsp),
-                            0, 0,   // origin
-                            XRES, YRES, // size
-                            0, black, // border width/clr
-                            black);   // backgrd clr
+  g_buffer = (uint32_t *)malloc(g_width * g_height * 4);
+  mfb_set_resize_callback(window, resize);
 
+  mfb_set_viewport(window, 50, 50, g_width - 50 - 50, g_height - 50 - 50);
+  resize(window, g_width - 100, g_height - 100); // to resize buffer
 
-  Atom wmDelete=XInternAtom(dsp, "WM_DELETE_WINDOW", True);
-  XSetWMProtocols(dsp, win, &wmDelete, 1);
+  mfb_update_state state;
 
-  gc = XCreateGC(dsp, win,
-                 0,       // mask of values
-                 NULL);   // array of values
+  static Renderer r(
+      g_width,
+      g_height,
+      [](int x, int y, Color color)
+      {
+        //maybe make it "draw" things off screen
+        g_buffer[y*g_width + x] = MFB_RGB(color.red, color.green, color.blue);
+      },
+      [&]()
+      {
+        state = mfb_update_ex(window, g_buffer, g_width, g_height);
+        if (state != STATE_OK)
+        {
+          window = 0x0;
+          exit(0);
+        }
+      });
 
-  XSetForeground(dsp, gc, black);
-
-  XEvent evt;
-  long eventMask = StructureNotifyMask;
-  eventMask |= ButtonPressMask|ButtonReleaseMask|KeyPressMask|KeyReleaseMask;
-  XSelectInput(dsp, win, eventMask);
-
-  KeyCode keyQ;
-  keyQ = XKeysymToKeycode(dsp, XStringToKeysym("Q"));
-
-  XMapWindow(dsp, win);
-
-  // wait until window appears
-  do { XNextEvent(dsp,&evt); } while (evt.type != MapNotify);
-
-  srand(time(0)); // only 1 sec resolution so use once per run
-  update_screen();
-
-  int loop = 1;
-
-  while (loop) {
-    // for repeated fine seeding use:
-    // struct timeval ti
-    // gettimeofday(&ti,NULL);
-    // srand((ti.tv_sec * 1000) + (ti.tv_usec / 1000));
-
-    //update_screen();
-
-    //XNextEvent(dsp, &evt);
-  //   switch (evt.type) {
-
-  //     case (ButtonRelease) :
-
-  //       update_screen();
-  //       break;
-
-  //     case (KeyRelease) :
-
-  //       if (evt.xkey.keycode == keyQ) loop = 0;
-  //       else update_screen();
-  //       break;
-
-  //     case (ConfigureNotify) :
-
-  //       // Check if window has been resized
-  //       if (evt.xconfigure.width != XRES || evt.xconfigure.height != YRES)
-  //       {
-  //         XRES = evt.xconfigure.width;
-  //         YRES = evt.xconfigure.height;
-  //         update_screen();
-  //       }
-  //       break;
-
-  //     case (ClientMessage) :
-
-  //       if (evt.xclient.data.l[0] == wmDelete) loop = 0;
-  //       break;
-
-  //     default :
-  //       //update_screen();
-  //       break;
-  //   }
-  // } 
-    update_screen();
-  }
-  XDestroyWindow(dsp, win);
-  XCloseDisplay(dsp);
+  // MAIN LOOP
+  do
+  {
+    
+    for (int i = 0; i < g_width ; i++)
+    {
+      for(int j = 0; j < g_height; j++)
+      {
+        // if(i == j) r.setPixel(i,j,{255,0,0});
+        r.line(i,j,6,10,{255,255,0});
+      }
+    }
+    r.clear();
+  } while (mfb_wait_sync(window));
 
   return 0;
 }
-
-void update_screen()
-{
-  const static Renderer r(
-    XRES,
-    YRES,
-    [](int x, int y, int color)
-    {
-      XSetForeground(dsp,gc,color);
-      XDrawPoint(dsp, win, gc, x, y);
-    },
-    []()
-    {
-      XClearWindow(dsp, win);
-    }
-  );
-  r.clear();
-
-  long i;
-  for (i=0; i<NPTS; i++) {
-    r.setPixel(rand()%XRES, rand()%YRES, 0xbb00ff);
-  }
-}
-  
