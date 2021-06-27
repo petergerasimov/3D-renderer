@@ -22,7 +22,7 @@ void resize(struct mfb_window *window, int width, int height)
 
 int main()
 {
-
+  //INIT
   struct mfb_window *window = mfb_open_ex("Renderer", g_width, g_height, WF_RESIZABLE);
   if (!window)
     return 0;
@@ -30,8 +30,8 @@ int main()
   g_buffer = (uint32_t *)malloc(g_width * g_height * 4);
   mfb_set_resize_callback(window, resize);
 
-  mfb_set_viewport(window, 50, 50, g_width - 50 - 50, g_height - 50 - 50);
-  resize(window, g_width - 100, g_height - 100); // to resize buffer
+  mfb_set_viewport(window, 0, 0, g_width, g_height);
+  resize(window, g_width, g_height); // to resize buffer
 
   mfb_update_state state;
 
@@ -51,21 +51,29 @@ int main()
           window = 0x0;
           exit(0);
         }
-      });
-
+        memset(g_buffer, 0, g_width*g_height*sizeof(*g_buffer));
+      }
+  );
+  
   // MAIN LOOP
+
+  uint8_t s = 0;
+
   do
   {
-    
+    r.clear();
     for (int i = 0; i < g_width ; i++)
     {
       for(int j = 0; j < g_height; j++)
       {
         // if(i == j) r.setPixel(i,j,{255,0,0});
-        r.line(i,j,6,10,{255,255,0});
+        uint8_t red = sin(0.3*s + 0) * 255;
+        uint8_t grn = sin(0.3*s + 2) * 255;
+        uint8_t blu = sin(0.3*s + 4) * 255;
+        r.setPixel(i,j,{red,grn,blu});
       }
     }
-    r.clear();
+    s++;
   } while (mfb_wait_sync(window));
 
   return 0;
