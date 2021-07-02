@@ -82,3 +82,14 @@ Matrix<float> Renderer::rotZMat(float angle)
     };
     return toReturn;
 }
+Matrix<float> Renderer::projMat()
+{
+    Matrix<float> toReturn;
+    toReturn = {
+        {atan(fovX/2),0           ,0,0},
+        {0           ,atan(fovY/2),0,0},
+        {0           ,0,-(zFar+zNear)/(zFar-zNear),-(2*zFar*zNear)/(zFar-zNear)},
+        {0,0,-1,0}
+    };
+    return toReturn;
+}

@@ -34,7 +34,7 @@ class Renderer
             width(width),
             height(height),
             setPixel(setPixel), 
-            clear(clear){};
+            clear(clear) {};
         std::function<void(Point,Color)> setPixel;
         // void (*setPixel)(int, int, Color);
         std::function<void()> clear;
@@ -44,11 +44,14 @@ class Renderer
         Matrix<float> rotXMat(float angle);
         Matrix<float> rotYMat(float angle);
         Matrix<float> rotZMat(float angle);
+        Matrix<float> projMat();
     private:
         int width;
         int height;
-        float fovX = PI/2;
         float fovY = PI/2;
+        float fovX = PI/2;
+        float zNear = 1.0f;
+        float zFar = 100.0f;
 };
 
 

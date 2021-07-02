@@ -44,7 +44,7 @@ int main()
       [](Point p, Color color) 
       {
         //maybe make it "draw" things off screen
-        if(p.y >= 0 && p.y <= g_height && p.x >= 0 && p.x <= g_width)
+        if(p.y >= 0 && p.y < g_height && p.x >= 0 && p.x < g_width)
         {
           g_buffer[p.y*g_width + p.x] = color.i;
         }
@@ -91,9 +91,18 @@ int main()
     std::vector<Point> pts(8);
     for(int i = 0; i < points.size(); i++)
     {
-      projected = r.rotXMat(s)*r.rotYMat(s)*r.rotZMat(s)*r.scaleMat({50,50,50})*points[i];
-      int x = (int)projected[1][0] + hw;
-      int y = (int)projected[2][0] + hh;
+      projected = ( r.rotXMat(s)*r.rotYMat(s)*r.rotZMat(s) ) * points[i];
+      //[View To Projection]x[World To View]x[Model to World]=[ModelViewProjectionMatrix].
+     
+      projected = r.projMat() * projected;
+      float sf = 100.0f;
+      projected = r.scaleMat({sf,sf,sf}) * projected;
+      float z = projected[2][0];
+      //fix this bs with https://en.wikipedia.org/wiki/3D_projection
+      int x = (int)(projected[0][0]/(z/sf)) + hw;
+      int y = (int)(projected[1][0]/(z/sf)) + hh;
+      // int x = (int)(projected[0][0]) + hw;
+      // int y = (int)(projected[1][0]) + hh;
       r.setPixel({x,y},{255,255,255});
       pts[i] = {x,y};
     }
