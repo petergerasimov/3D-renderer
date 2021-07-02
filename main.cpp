@@ -1,5 +1,7 @@
 #include <MiniFB.h>
 #include "renderer.hpp"
+// #include "linalg.hpp"
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <cstdint>
@@ -38,12 +40,17 @@ int main()
   static Renderer r(
       g_width,
       g_height,
-      [](int x, int y, Color color)
+      //set pixel
+      [](Point p, Color color) 
       {
         //maybe make it "draw" things off screen
-        g_buffer[y*g_width + x] = MFB_RGB(color.red, color.green, color.blue);
+        if(p.y >= 0 && p.y <= g_height && p.x >= 0 && p.x <= g_width)
+        {
+          g_buffer[p.y*g_width + p.x] = color.i;
+        }
       },
-      [&]()
+      //clear screen
+      [&]() 
       {
         state = mfb_update_ex(window, g_buffer, g_width, g_height);
         if (state != STATE_OK)
@@ -55,25 +62,58 @@ int main()
       }
   );
   
+  
+
+  // CUBE
+
+  std::vector<std::vector<float>> points = {
+    { 1, 1, 1, 1},
+    { 1,-1, 1, 1},
+    {-1,-1, 1, 1},
+    {-1, 1, 1, 1},
+    { 1, 1,-1, 1},
+    { 1,-1,-1, 1},
+    {-1,-1,-1, 1},
+    {-1, 1,-1, 1}
+  };
+
   // MAIN LOOP
 
-  uint8_t s = 0;
+  int hw = g_width/2;
+  int hh = g_height/2;
+  float s = 0;
+
+  Matrix<float> projected;
 
   do
   {
     r.clear();
-    for (int i = 0; i < g_width ; i++)
+    std::vector<Point> pts(8);
+    for(int i = 0; i < points.size(); i++)
     {
-      for(int j = 0; j < g_height; j++)
-      {
-        // if(i == j) r.setPixel(i,j,{255,0,0});
-        uint8_t red = sin(0.3*s + 0) * 255;
-        uint8_t grn = sin(0.3*s + 2) * 255;
-        uint8_t blu = sin(0.3*s + 4) * 255;
-        r.setPixel(i,j,{red,grn,blu});
-      }
+      projected = r.rotXMat(s)*r.rotYMat(s)*r.rotZMat(s)*r.scaleMat({50,50,50})*points[i];
+      int x = (int)projected[1][0] + hw;
+      int y = (int)projected[2][0] + hh;
+      r.setPixel({x,y},{255,255,255});
+      pts[i] = {x,y};
     }
-    s++;
+    //aids
+    for(int i = 0; i < 4; i++)
+    {
+      r.line(pts[i],pts[i+4],{255,255,255});
+    }
+    for(int i = 0; i < 3; i++)
+    {
+      r.line(pts[i],pts[i+1],{255,255,255});
+    }
+    r.line(pts[3],pts[0],{255,255,255});
+    for(int i = 4; i < 7; i++)
+    {
+      r.line(pts[i],pts[i+1],{255,255,255});
+    }
+    r.line(pts[7],pts[4],{255,255,255});
+    //temp testing bs will remove
+    s+=0.01;
   } while (mfb_wait_sync(window));
 
   return 0;
