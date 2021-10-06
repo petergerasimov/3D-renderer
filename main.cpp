@@ -30,7 +30,7 @@ int main()
   if (!window)
     return 0;
 
-  g_buffer = (uint32_t *)malloc(g_width * g_height * 4);
+  g_buffer = (uint32_t*) malloc(g_width * g_height * 4);
   mfb_set_resize_callback(window, resize);
 
   mfb_set_viewport(window, 0, 0, g_width, g_height);
@@ -42,20 +42,16 @@ int main()
       g_width,
       g_height,
       //set pixel
-      [](Point p, Color color) 
-      {
+      [](Point p, Color color) {
         //maybe make it "draw" things off screen
-        if(p.y >= 0 && p.y < (int)g_height && p.x >= 0 && p.x < (int)g_width)
-        {
+        if(p.y >= 0 && p.y < (int)g_height && p.x >= 0 && p.x < (int)g_width) {
           g_buffer[p.y * g_width + p.x] = color.i;
         }
       },
       //clear screen
-      [&]() 
-      {
+      [&]() {
         state = mfb_update_ex(window, g_buffer, g_width, g_height);
-        if (state != STATE_OK)
-        {
+        if (state != STATE_OK) {
           window = 0x0;
           exit(0);
         }
@@ -80,48 +76,43 @@ int main()
 
   // MAIN LOOP
 
-  int hw = g_width/2;
-  int hh = g_height/2;
+  int hw = g_width / 2;
+  int hh = g_height / 2;
   float s = 0;
 
   Matrix<float> projected;
 
-  do
-  {
+  do {
     r.clear();
     std::vector<Point> pts(8);
-    for(uint i = 0; i < points.size(); i++)
-    {
+    for (uint i = 0; i < points.size(); i++) {
       projected = ( r.rotXMat(s) * ( r.rotYMat(s) * r.rotZMat(s) ) ) * points[i];
       //[View To Projection]x[World To View]x[Model to World]=[ModelViewProjectionMatrix].
      
       projected = r.projMat() * projected;
       float sf = 100.0f;
-      projected = r.scaleMat({sf,sf,sf}) * projected;
+      projected = r.scaleMat({ sf, sf, sf }) * projected;
       float z = projected[2][0];
       //fix this bs with https://en.wikipedia.org/wiki/3D_projection
-      int x = (int)(projected[0][0]/(z/sf)) + hw;
-      int y = (int)(projected[1][0]/(z/sf)) + hh;
+      int x = (int)(projected[0][0] / (z / sf)) + hw;
+      int y = (int)(projected[1][0] / (z / sf)) + hh;
       // int x = (int)(projected[0][0]) + hw;
       // int y = (int)(projected[1][0]) + hh;
-      r.setPixel({x,y},{255,255,255});
-      pts[i] = {x,y};
+      r.setPixel({ x, y }, { 255, 255, 255 });
+      pts[i] = { x, y };
     }
     //aids
-    for(int i = 0; i < 4; i++)
-    {
-      r.line(pts[i],pts[i+4],{255,255,255});
+    for (int i = 0; i < 4; i++) {
+      r.line(pts[i], pts[i + 4], { 255, 255, 255 });
     }
-    for(int i = 0; i < 3; i++)
-    {
-      r.line(pts[i],pts[i+1],{255,255,255});
+    for (int i = 0; i < 3; i++) {
+      r.line(pts[i], pts[i + 1], { 255, 255, 255 });
     }
-    r.line(pts[3],pts[0],{255,255,255});
-    for(int i = 4; i < 7; i++)
-    {
-      r.line(pts[i],pts[i+1],{255,255,255});
+    r.line(pts[3], pts[0], { 255, 255, 255 });
+    for (int i = 4; i < 7; i++) {
+      r.line(pts[i],pts[i + 1], { 255, 255, 255 });
     }
-    r.line(pts[7],pts[4],{255,255,255});
+    r.line(pts[7], pts[4], { 255, 255, 255 });
     //temp testing bs will remove
     s+=0.01;
   } while (mfb_wait_sync(window));
