@@ -5,6 +5,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <cstdint>
+#include <string.h>
 
 static uint32_t g_width = 800;
 static uint32_t g_height = 600;
@@ -44,9 +45,9 @@ int main()
       [](Point p, Color color) 
       {
         //maybe make it "draw" things off screen
-        if(p.y >= 0 && p.y < g_height && p.x >= 0 && p.x < g_width)
+        if(p.y >= 0 && p.y < (int)g_height && p.x >= 0 && p.x < (int)g_width)
         {
-          g_buffer[p.y*g_width + p.x] = color.i;
+          g_buffer[p.y * g_width + p.x] = color.i;
         }
       },
       //clear screen
@@ -89,9 +90,9 @@ int main()
   {
     r.clear();
     std::vector<Point> pts(8);
-    for(int i = 0; i < points.size(); i++)
+    for(uint i = 0; i < points.size(); i++)
     {
-      projected = ( r.rotXMat(s)*r.rotYMat(s)*r.rotZMat(s) ) * points[i];
+      projected = ( r.rotXMat(s) * ( r.rotYMat(s) * r.rotZMat(s) ) ) * points[i];
       //[View To Projection]x[World To View]x[Model to World]=[ModelViewProjectionMatrix].
      
       projected = r.projMat() * projected;

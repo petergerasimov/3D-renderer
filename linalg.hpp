@@ -20,12 +20,18 @@ class Matrix
             data.push_back(row);
         }
     };
+    // Matrix(const Matrix &rhs)
+    // {
+    //     n = rhs.n;
+    //     m = rhs.m;
+    //     data = rhs.data;
+    // }
     ///
-    int getRows()
+    int getRows() const
     {
         return n;
     }
-    int getCols()
+    int getCols() const
     {
         return m;
     }
@@ -45,17 +51,9 @@ class Matrix
     {
         return this->data[index];
     }
-    Matrix& operator=(const Matrix& other)
+    std::vector<T> operator[](int index) const
     {
-        // Guard self assignment
-        if (this == &other)
-            return *this;
-    
-        this->n = other.n;
-        this->m = other.m;
-        this->data = other.data;
-
-        return *this;
+        return this->data[index];
     }
     Matrix& operator=(const std::vector<std::vector<T>>& other)
     {
@@ -88,7 +86,7 @@ class Matrix
         }
         return toReturn;
     }
-    Matrix operator*(Matrix& b)
+    Matrix operator*(Matrix const &b) const
     {
         Matrix<T> toReturn(this->getRows(), b.getCols());
         if (this->getCols() != b.getRows()) 
@@ -118,7 +116,7 @@ class Matrix
     Matrix operator*(std::vector<T>& b)
     {
         Matrix<T> bmat(b.size(),1);
-        for(int i = 0; i < b.size(); i++)
+        for(uint i = 0; i < b.size(); i++)
         {
             bmat[i][0] = b[i];
         }

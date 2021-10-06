@@ -29,6 +29,13 @@ struct Point
 
 class Renderer
 {
+    private:
+        int width;
+        int height;
+        float fovY = PI/2;
+        float fovX = PI/2;
+        float zNear = 1.0f;
+        float zFar = 100.0f;
     public:
         Renderer(uint32_t width, uint32_t height, std::function<void(Point,Color)> setPixel, std::function<void()> clear) :
             width(width),
@@ -45,13 +52,6 @@ class Renderer
         Matrix<float> rotYMat(float angle);
         Matrix<float> rotZMat(float angle);
         Matrix<float> projMat();
-    private:
-        int width;
-        int height;
-        float fovY = PI/2;
-        float fovX = PI/2;
-        float zNear = 1.0f;
-        float zFar = 100.0f;
 };
 
 

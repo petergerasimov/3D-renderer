@@ -54,8 +54,8 @@ Matrix<float> Renderer::rotXMat(float angle)
     Matrix<float> toReturn;
     toReturn = {
         {1,0,0,0},
-        {0,cos(angle),-sin(angle),0},
-        {0,sin(angle),cos(angle),0},
+        {0,cosf(angle),-sinf(angle),0},
+        {0,sinf(angle),cosf(angle),0},
         {0,0,0,1}
     };
     return toReturn;
@@ -64,9 +64,9 @@ Matrix<float> Renderer::rotYMat(float angle)
 {
     Matrix<float> toReturn;
     toReturn = {
-        {cos(angle),0,sin(angle),0},
+        {cosf(angle),0,sinf(angle),0},
         {0,1,0,0},
-        {-sin(angle),0,cos(angle),0},
+        {-sinf(angle),0,cosf(angle),0},
         {0,0,0,1}
     };
     return toReturn;
@@ -75,8 +75,8 @@ Matrix<float> Renderer::rotZMat(float angle)
 {
     Matrix<float> toReturn;
     toReturn = {
-        {cos(angle),-sin(angle),0,0},
-        {sin(angle),cos(angle),0,0},
+        {cosf(angle),-sinf(angle),0,0},
+        {sinf(angle),cosf(angle),0,0},
         {0,0,1,0},
         {0,0,0,1}
     };
@@ -86,8 +86,8 @@ Matrix<float> Renderer::projMat()
 {
     Matrix<float> toReturn;
     toReturn = {
-        {atan(fovX/2),0           ,0,0},
-        {0           ,atan(fovY/2),0,0},
+        {atanf(fovX/2),0           ,0,0},
+        {0           ,atanf(fovY/2),0,0},
         {0           ,0,-(zFar+zNear)/(zFar-zNear),-(2*zFar*zNear)/(zFar-zNear)},
         {0,0,-1,0}
     };
