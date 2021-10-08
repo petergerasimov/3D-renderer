@@ -68,9 +68,9 @@ class Matrix
            throw std::runtime_error("Column of first matrix should be equal to row of second matrix");
         } else {
             for (int i = 0; i < this->getRows(); i++) {
-                for (int j = 0; j < b.getCols(); j++) {
-                    for (int k = 0; k < b.getRows(); k++) {
-                        toReturn[i][j] = toReturn[i][j] + (*this)[i][k] * b[k][j];
+                for (int k = 0; k < b.getRows(); k++) {
+                    for (int j = 0; j < b.getCols(); j++) {
+                        toReturn[i][j] += (*this)[i][k] * b[k][j];
                     }
                 }
             }

@@ -4,7 +4,10 @@
 #include <cstdint>
 #include <functional>
 #include <cmath>
-#include "linalg.hpp"
+// #include "linalg.hpp"
+#include <eigen3/Eigen/Core>
+
+using namespace Eigen;
 
 #define RGB(r, g, b)    (((uint32_t) r) << 16) | (((uint32_t) g) << 8) | ((uint32_t) b)
 
@@ -21,10 +24,10 @@ union Color
     uint32_t i;
 };
 
-struct Point
+struct Camera
 {
-    int x;
-    int y;
+    Vector4f pos;
+    Vector4f rot;
 };
 
 class Renderer
@@ -32,26 +35,42 @@ class Renderer
     private:
         int width;
         int height;
-        float fovY = PI/2;
-        float fovX = PI/2;
-        float zNear = 1.0f;
-        float zFar = 100.0f;
+        float aspectRatio;
+        float fov = 90;
+        float zNear = 0.1f;
+        float zFar = 1000.0f;
+        Camera camera {
+            { 0.0f, 0.0f, 0.0f, 1.0f },
+            { 0.0f, 0.0f, 0.0f, 1.0f }
+        };
+        Vector3f displaySeurfacePos = { 1.0f, 1.0f, 1.0f };
+        Matrix4f cameraRotation;
+        float fastSin(float x);
+        float fastCos(float x);
     public:
-        Renderer(uint32_t width, uint32_t height, std::function<void(Point,Color)> setPixel, std::function<void()> clear) :
+        Renderer(uint32_t width, uint32_t height, std::function<void(int x, int y, Color)> setPixel, std::function<void()> clear) :
             width(width),
             height(height),
             setPixel(setPixel), 
-            clear(clear) {};
-        std::function<void(Point,Color)> setPixel;
+            clear(clear) { 
+                setCameraRotation(camera.rot);
+                // setCameraPos({ -width / 2.0f, -height / 2.0f, 0 });
+                aspectRatio = float(height) / (float)width; 
+            };
+        std::function<void(int x, int y, Color)> setPixel;
         // void (*setPixel)(int, int, Color);
         std::function<void()> clear;
-        void line(Point a, Point b, Color c);
-        Matrix<float> transMat(std::vector<float> trans);
-        Matrix<float> scaleMat(std::vector<float> scale);
-        Matrix<float> rotXMat(float angle);
-        Matrix<float> rotYMat(float angle);
-        Matrix<float> rotZMat(float angle);
-        Matrix<float> projMat();
+        void setCameraRotation(Vector4f rot);
+        void setCameraPos(Vector4f pos);
+        Vector2i project(const Vector4f& a);
+        void line(Vector2i a, Vector2i b, Color c);
+        void tri(Vector4f pts[3], Color c);
+        Matrix4f transMat(Vector3f trans);
+        Matrix4f scaleMat(Vector3f scale);
+        Matrix4f rotXMat(float angle);
+        Matrix4f rotYMat(float angle);
+        Matrix4f rotZMat(float angle);
+        Matrix4f projMat();
 };
 
 
