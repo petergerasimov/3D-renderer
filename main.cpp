@@ -9,8 +9,8 @@
 #include <string.h>
 #include <iostream>
 
-static uint32_t g_width = 800;
-static uint32_t g_height = 600;
+static uint32_t g_width = 1280;
+static uint32_t g_height = 720;
 static uint32_t *g_buffer = 0x0;
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -46,8 +46,8 @@ int main()
       //set pixel
       [](int x, int y, Color color) {
         //maybe make it "draw" things off screen
-        x += g_width/2;
-        y += g_height/2;
+        // x += g_width/2;
+        // y += g_height/2;
         if(y >= 0 && y < (int)g_height && x >= 0 && x < (int)g_width) {
           g_buffer[y * g_width + x] = color.i;
         }
@@ -88,10 +88,12 @@ int main()
     r.clear();
     for (uint i = 0; i < vertices.size(); i++) {
       Matrix<float, 4, 1> rotatedMat;
-      rotatedMat = ( r.rotXMat(s) * r.rotYMat(s) * r.rotZMat(s) ) * vertices[i];
-      float sf = 100.0f;
-      rotatedMat = r.scaleMat({ sf, sf, sf }) * rotatedMat;
-      rotatedMat = r.transMat({3,3,3}) * rotatedMat;
+      
+      rotatedMat = ( r.rotXMat(s) * r.rotZMat(s) ) * vertices[i];
+      rotatedMat = r.transMat({0,0,3}) * rotatedMat;
+      // rotatedMat = r.scaleMat({100,100,100}) * rotatedMat;
+      
+      
       
       rotated[i] = { rotatedMat(0, 0), rotatedMat(1, 0), rotatedMat(2, 0), 1 };
     }
@@ -99,11 +101,11 @@ int main()
     for (const auto& face : faces) {
       Vector4f points[3];
       for (int i = 0; i < 3; i++) {
-        points[i] = { rotated[face[i] - 1][0], rotated[face[i] - 1][1], rotated[face[i] - 1][2], 1 };
+        points[i] = rotated[face[i] - 1];
       }
       r.tri(points, { 255, 255, 255 });
     }
-    s+=0.05;
+    s+=0.01;
   } while (mfb_wait_sync(window));
 
   return 0;

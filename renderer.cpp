@@ -1,4 +1,5 @@
 #include "renderer.hpp"
+#include <iostream>
 
 void Renderer::setCameraRotation(Vector4f rot) {
     camera.rot = rot;
@@ -9,24 +10,22 @@ void Renderer::setCameraPos(Vector4f pos)
     camera.pos = pos;
 }
 Vector2i Renderer::project(const Vector4f& a) {
-    // https://en.wikipedia.org/wiki/3D_projection
-    // Making these vars to be consistent with wiki
-    // Point3D e = displaySeurfacePos;
     Vector4f toBeProjected = a - camera.pos;
     static Matrix4f proj = projMat();
-    Matrix<float, 4, 1> d = proj * cameraRotation * toBeProjected;
-    Vector2i b;
-    b(0) = d(0,0);
-    b(1) = d(1,0);
-    // b(0) = (e.z / d[2][0]) * d[0][0] + e.x;
-    // b(1) = (e.z / d[2][0]) * d[1][0] + e.y;
-    // Orthograpic
-    // Vector2i b;
-    // b(0) = a(0);
-    // b(1) = a(1);
+    Matrix<float, 4, 1> d = proj * (cameraRotation * toBeProjected);
+    if (d(3,0) != 0.0f)
+	{
+		d(0,0) /= d(3,0); d(1,0) /= d(3,0); d(2,0) /= d(3,0);
+	}
     
-    // b(0) = (b(0) < 0) ? std::max(b(0), -(int)width) : std::min(b(0), (int)width);
-    // b(1) = (b(1) < 0) ? std::max(b(1), -(int)height) : std::min(b(1), (int)height);
+    Vector2i b;
+    b(0) = d(0,0)*10 + 600;
+    b(1) = d(1,0)*10 + 600;
+    // b(0) = d(0,0);
+    // b(1) = d(1,0);
+    // std::cout << b << std::endl;
+    b(0) = (b(0) < 0) ? std::max(b(0), -(int)width) : std::min(b(0), (int)width);
+    b(1) = (b(1) < 0) ? std::max(b(1), -(int)height) : std::min(b(1), (int)height);
     return b;
 }
 void Renderer::line(Vector2i a, Vector2i b, Color c)
