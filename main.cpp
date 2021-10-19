@@ -1,6 +1,11 @@
 #include <MiniFB.h>
 #include "renderer.hpp"
 #include "obj.hpp"
+#include <eigen3/Eigen/Dense>
+#include <eigen3/Eigen/Geometry>
+
+using namespace Eigen;
+
 // #include "linalg.hpp"
 
 #include <stdio.h>
@@ -81,7 +86,7 @@ int main()
   int hh = g_height / 2;
   float s = 0;
 
-  
+  Vector3f light = {0,0,1};
   std::vector<Vector4f> rotated = vertices;
 
   do {
@@ -100,10 +105,20 @@ int main()
     //aids
     for (const auto& face : faces) {
       Vector4f points[3];
+      Vector3f points3f[3];
       for (int i = 0; i < 3; i++) {
         points[i] = rotated[face[i] - 1];
+        points3f[i] = {points[i][0], points[i][1], points[i][2]};
       }
-      r.tri(points, { 255, 255, 255 });
+      auto n = (points3f[2] - points3f[0]).cross((points3f[2] - points3f[1]));
+      n.normalize();
+      float intensity = n.dot(light);
+      if(intensity > 0)
+      {
+        uint8_t c = n.dot(light) * 255;
+        r.triFilled(points, { c, c, c });
+      }
+      
     }
     s+=0.01;
   } while (mfb_wait_sync(window));

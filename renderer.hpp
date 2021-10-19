@@ -65,6 +65,7 @@ class Renderer
         Vector2i project(const Vector4f& a);
         void line(Vector2i a, Vector2i b, Color c);
         void tri(Vector4f pts[3], Color c);
+        void triFilled(Vector4f pts[3], Color c);
         Matrix4f transMat(Vector3f trans);
         Matrix4f scaleMat(Vector3f scale);
         Matrix4f rotXMat(float angle);
