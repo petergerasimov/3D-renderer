@@ -71,15 +71,13 @@ int main()
   
 
   // Load object
-  Obj obj("./teapot.obj");
+  Obj obj("./bunny.obj");
 
-  vec2df vTemp = obj.getVertices();
-  vec2di faces = obj.getFaces();
-  std::vector<Vector4f> vertices;
-  for(int i = 0; i < vTemp.size(); i++) {
-    Vector4f toPush(vTemp[i][0], vTemp[i][1], vTemp[i][2], vTemp[i][3]);
-    vertices.push_back(toPush);
-  }
+  std::vector<Vector4f> vertices = obj.getVertices();
+  std::vector<Vector4f> vertexNormals = obj.getVertexNormals();
+  vec2di faces = obj.getFaceVertIds();
+  vec2di faceNormals = obj.getFaceNormalIds();
+
 
   // MAIN LOOP
   int hw = g_width / 2;
@@ -87,6 +85,13 @@ int main()
   float s = 0;
 
   Vector3f light = {0,0,1};
+  Color lightColor = {255, 0, 0};
+  light.normalize();
+
+  Vector3f light2 = {0,1,1};
+  Color lightColor2 = {0, 0, 255};
+  light2.normalize();
+
   std::vector<Vector4f> rotated = vertices;
 
   do {
@@ -94,8 +99,8 @@ int main()
     for (uint i = 0; i < vertices.size(); i++) {
       Matrix<float, 4, 1> rotatedMat;
       
-      rotatedMat = ( r.rotXMat(s) * r.rotZMat(s) ) * vertices[i];
-      rotatedMat = r.transMat({0,0,3}) * rotatedMat;
+      rotatedMat = ( r.rotYMat(s) * r.rotXMat(3.14) ) * vertices[i];
+      rotatedMat = r.transMat({0,2,3}) * rotatedMat;
       // rotatedMat = r.scaleMat({100,100,100}) * rotatedMat;
       
       
@@ -103,6 +108,11 @@ int main()
       rotated[i] = { rotatedMat(0, 0), rotatedMat(1, 0), rotatedMat(2, 0), 1 };
     }
     //aids
+    std::sort(faces.begin(), faces.end(), [&](const std::vector<int>& a, const std::vector<int>& b) { 
+        float aAvg = (rotated[a[0] - 1][2] + rotated[a[1] - 1][2] + rotated[a[2] - 1][2]) / 3.0f;
+        float bAvg = (rotated[b[0] - 1][2] + rotated[b[1] - 1][2] + rotated[b[2] - 1][2]) / 3.0f;
+        return aAvg < bAvg;
+    } );
     for (const auto& face : faces) {
       Vector4f points[3];
       Vector3f points3f[3];
@@ -113,10 +123,23 @@ int main()
       auto n = (points3f[2] - points3f[0]).cross((points3f[2] - points3f[1]));
       n.normalize();
       float intensity = n.dot(light);
-      if(intensity > 0)
+      float intensity2 = n.dot(light2);
+
+
+      if(intensity > 0 || intensity2 > 0)
       {
-        uint8_t c = n.dot(light) * 255;
-        r.triFilled(points, { c, c, c });
+        Color newColor = lightColor;
+        Color newColor2 = lightColor2;
+        Color twoLights;
+        for(int i = 0; i < 3; i++)
+        {
+          newColor.bgr[i] *= (intensity > 0) ? intensity : 0;
+          newColor2.bgr[i] *= (intensity2 > 0) ? intensity2 : 0;
+          twoLights.bgr[i] = (uint8_t)(std::min(((int)newColor.bgr[i] + (int)newColor2.bgr[i]), 255));
+          // twoLights.bgr[i] = (uint8_t)(((int)newColor.bgr[i] + (int)newColor2.bgr[i])/2);
+        }
+
+        r.triFilled(points, twoLights);
       }
       
     }
