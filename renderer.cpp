@@ -129,6 +129,89 @@ void Renderer::triFilled(Vector4f pts[3], Color c) {
         }
     }
 }
+// https://gamedev.stackexchange.com/questions/23743/whats-the-most-efficient-way-to-find-barycentric-coordinates
+void Renderer::barycentric(const Vector2i& p, Vector2i pts[3], Vector3f& bary)
+{
+    Vector2i v0 = pts[1] - pts[0], v1 = pts[2] - pts[0], v2 = p - pts[0];
+    float den = v0(0) * v1(1) - v1(0) * v0(1);
+    bary(1) = (v2(0) * v1(1) - v1(0) * v2(1)) / den;
+    bary(2) = (v0(0) * v2(1) - v2(0) * v0(1)) / den;
+    bary(0) = 1.0f - bary(1) - bary(2);
+    // Make them absolute
+    bary = bary.cwiseAbs();
+}
+void Renderer::triGradient(Vector4f pts[3], Color colA, Color colB, Color colC) {
+    int minX = width;
+    int maxX = 0;
+    int minY = height;
+    int maxY = 0;
+
+    Vector2i projected[3];
+
+    for(int i = 0; i < 3; i++) {
+        if(pts[i][2] < camera.pos[2]) return;
+
+        projected[i] = project(pts[i]);
+
+        minX = std::min(minX, projected[i][0]);
+        maxX = std::max(maxX, projected[i][0]);
+        minY = std::min(minY, projected[i][1]);
+        maxY = std::max(maxY, projected[i][1]);
+    }
+
+    minX = std::max(minX, 0);
+    minY = std::max(minY, 0);
+    maxX = std::min(maxX, width);
+    maxY = std::min(maxY, height);
+
+    for(int i = minX; i < maxX; i++) {
+        for(int j = minY; j < maxY; j++) {
+            Vector2i pt = {i, j};
+            Vector3f bary = {0, 0, 0};
+            barycentric(pt, projected, bary);
+
+            if( (bary(0) + bary(1) + bary(2)) > 1.0001f ) {
+                continue;
+            }
+
+            Color c = {0, 0, 0};
+            for(int k = 0; k < 3; k++) {
+                c.bgr[k] = colA.bgr[k] * bary(0) + colB.bgr[k] * bary(1) + colC.bgr[k] * bary(2);
+            }
+
+            setPixel(i, j, c);
+        }
+    }
+
+}
+bool Renderer::dirLightColor(const Vector3f& normal, const std::vector<dirLight>& lights, Color& c) {
+    std::vector<float> intensities;
+    bool existsPositive = false;
+
+    for (auto& light : lights) {
+        float intensity = normal.dot(light.getPos());
+        intensities.push_back(intensity);
+        existsPositive |= (intensity > 0);
+    }
+
+    c = {0, 0, 0};
+
+    if (existsPositive) {
+      
+
+      for (int i = 0, sz = intensities.size(); i < sz; i++) {
+        Color newColor = lights[i].col;
+
+        for (int j = 0; j < 3; j++) {
+          newColor.bgr[j] *= (intensities[i] > 0) ? intensities[i] : 0;
+          c.bgr[j] = (uint8_t)(std::min(((int)c.bgr[j] + (int)newColor.bgr[j]), 255));
+        }
+      }
+
+      return true;
+    }
+    return false;
+}
 Matrix4f Renderer::transMat(Vector3f trans)
 {
     Matrix4f toReturn {

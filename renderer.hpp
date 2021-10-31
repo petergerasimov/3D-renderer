@@ -3,6 +3,7 @@
 
 #include <cstdint>
 #include <functional>
+#include <vector>
 #include <cmath>
 // #include "linalg.hpp"
 #include <eigen3/Eigen/Core>
@@ -18,16 +19,24 @@ using namespace Eigen;
 
 #define PI 3.14159f
 
-union Color
-{
+union Color {
     uint8_t bgr[3];
     uint32_t i;
 };
 
-struct Camera
-{
+struct Camera {
     Vector4f pos;
     Vector4f rot;
+};
+
+class dirLight {
+    private:
+        Vector3f pos;
+    public:
+        dirLight(Vector3f pos, Color col) : pos(pos), col(col) { this->pos.normalize(); };
+        void setPos(const Vector3f& pos) { this->pos = pos.normalized(); };
+        const Vector3f& getPos() const { return pos; }
+        Color col;
 };
 
 class Renderer
@@ -66,6 +75,9 @@ class Renderer
         void line(Vector2i a, Vector2i b, Color c);
         void tri(Vector4f pts[3], Color c);
         void triFilled(Vector4f pts[3], Color c);
+        void barycentric(const Vector2i& p, Vector2i pts[3], Vector3f& bary);
+        void triGradient(Vector4f pts[3], Color colA, Color colB, Color colC);
+        bool dirLightColor(const Vector3f& normal, const std::vector<dirLight>& lights, Color& c);
         Matrix4f transMat(Vector3f trans);
         Matrix4f scaleMat(Vector3f scale);
         Matrix4f rotXMat(float angle);

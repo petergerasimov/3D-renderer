@@ -50,9 +50,6 @@ int main()
       g_height,
       //set pixel
       [](int x, int y, Color color) {
-        //maybe make it "draw" things off screen
-        // x += g_width/2;
-        // y += g_height/2;
         if(y >= 0 && y < (int)g_height && x >= 0 && x < (int)g_width) {
           g_buffer[y * g_width + x] = color.i;
         }
@@ -78,42 +75,55 @@ int main()
   vec2di faces = obj.getFaceVertIds();
   vec2di faceNormals = obj.getFaceNormalIds();
 
+  std::vector<int> faceIdx(faces.size());
+  for(int i = 0; i < faceIdx.size(); i++) {
+    faceIdx[i] = i;
+  }
+
 
   // MAIN LOOP
   int hw = g_width / 2;
   int hh = g_height / 2;
   float s = 0;
 
-  Vector3f light = {0,0,1};
-  Color lightColor = {255, 0, 0};
-  light.normalize();
 
-  Vector3f light2 = {0,1,1};
-  Color lightColor2 = {0, 0, 255};
-  light2.normalize();
+  dirLight l1({0,0,1}, {255, 0, 0}); 
+  dirLight l2({0,1,1}, {0, 0, 255});
+
+  std::vector<dirLight> lights = {l1, l2};
 
   std::vector<Vector4f> rotated = vertices;
+  std::vector<Vector4f> rotatedNormals = vertexNormals;
 
   do {
     r.clear();
+
+    
+
     for (uint i = 0; i < vertices.size(); i++) {
       Matrix<float, 4, 1> rotatedMat;
+      Matrix<float, 4, 1> rotatedMatNorm;
       
       rotatedMat = ( r.rotYMat(s) * r.rotXMat(3.14) ) * vertices[i];
       rotatedMat = r.transMat({0,2,3}) * rotatedMat;
-      // rotatedMat = r.scaleMat({100,100,100}) * rotatedMat;
-      
-      
+
+      rotatedMatNorm = ( r.rotYMat(s) * r.rotXMat(3.14) ) * vertexNormals[i];
+      rotatedMatNorm = r.transMat({0,2,3}) * rotatedMatNorm;
       
       rotated[i] = { rotatedMat(0, 0), rotatedMat(1, 0), rotatedMat(2, 0), 1 };
+      rotatedNormals[i] = { rotatedMatNorm(0, 0), rotatedMatNorm(1, 0), rotatedMatNorm(2, 0), 1 };
     }
-    //aids
-    std::sort(faces.begin(), faces.end(), [&](const std::vector<int>& a, const std::vector<int>& b) { 
+
+    std::sort(faceIdx.begin(), faceIdx.end(), [&](const int& aId, const int& bId) { 
+        std::vector<int>& a = faces[aId];
+        std::vector<int>& b = faces[bId];
         float aAvg = (rotated[a[0] - 1][2] + rotated[a[1] - 1][2] + rotated[a[2] - 1][2]) / 3.0f;
         float bAvg = (rotated[b[0] - 1][2] + rotated[b[1] - 1][2] + rotated[b[2] - 1][2]) / 3.0f;
         return aAvg < bAvg;
     } );
-    for (const auto& face : faces) {
+
+    for (const auto& id : faceIdx) {
+      std::vector<int> face = faces[id];
       Vector4f points[3];
       Vector3f points3f[3];
       for (int i = 0; i < 3; i++) {
@@ -122,28 +132,15 @@ int main()
       }
       auto n = (points3f[2] - points3f[0]).cross((points3f[2] - points3f[1]));
       n.normalize();
-      float intensity = n.dot(light);
-      float intensity2 = n.dot(light2);
 
-
-      if(intensity > 0 || intensity2 > 0)
-      {
-        Color newColor = lightColor;
-        Color newColor2 = lightColor2;
-        Color twoLights;
-        for(int i = 0; i < 3; i++)
-        {
-          newColor.bgr[i] *= (intensity > 0) ? intensity : 0;
-          newColor2.bgr[i] *= (intensity2 > 0) ? intensity2 : 0;
-          twoLights.bgr[i] = (uint8_t)(std::min(((int)newColor.bgr[i] + (int)newColor2.bgr[i]), 255));
-          // twoLights.bgr[i] = (uint8_t)(((int)newColor.bgr[i] + (int)newColor2.bgr[i])/2);
-        }
-
-        r.triFilled(points, twoLights);
-      }
       
+      Color c;
+      if(r.dirLightColor(n, lights, c)) r.triFilled(points, c);
     }
-    s+=0.01;
+    s+=0.1;
+
+    Vector4f pts[3] = {{2,0,0,1}, {0,2,0,1}, {4,4,0,1}};
+    r.triGradient(pts, {255,0,0}, {0,255,0}, {0,0,255});
   } while (mfb_wait_sync(window));
 
   return 0;
