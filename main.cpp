@@ -91,8 +91,9 @@ int main()
 
   dirLight l1({0,0,1}, {255, 0, 0}); 
   dirLight l2({0,1,1}, {0, 0, 255});
+  dirLight l3({1,1,0}, {0, 255, 0});
 
-  std::vector<dirLight> lights = {l1, l2};
+  std::vector<dirLight> lights = {l1, l2, l3};
 
   std::vector<Vector4f> rotated = vertices;
   std::vector<Vector4f> rotatedNormals = vertexNormals;
@@ -147,7 +148,8 @@ int main()
       // Color c;
       // if(r.dirLightColor(n, lights, c)) /*r.triFilled(points, c)*/;
 
-      r.triGradient(points, colors[0], colors[1], colors[2]);
+      if(toDraw) r.triGradient(points, colors[0], colors[1], colors[2]);
+      // r.triFilled(points, colors[0]);
 
     }
     s += 0.01;

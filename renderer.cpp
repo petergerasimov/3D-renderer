@@ -159,27 +159,20 @@ void Renderer::triGradient(Vector4f pts[3], Color colA, Color colB, Color colC) 
         maxY = std::max(maxY, projected[i][1]);
     }
 
-    // minX = std::max(minX, 0);
-    // minY = std::max(minY, 0);
-    // maxX = std::min(maxX, width);
-    // maxY = std::min(maxY, height);
-
     for(int i = minX; i < maxX; i++) {
         for(int j = minY; j < maxY; j++) {
             Vector2i pt = {i, j};
             Vector3f bary = {0, 0, 0};
             barycentric(pt, projected, bary);
 
-            if( (bary(0) + bary(1) + bary(2)) > 1.00001f ) {
-                continue;
-            }
+            if( (bary(0) + bary(1) + bary(2)) <= 1.00001f ) {
+                Color c = {0, 0, 0};
+                for(int k = 0; k < 3; k++) {
+                    c.bgr[k] = colA.bgr[k] * bary(0) + colB.bgr[k] * bary(1) + colC.bgr[k] * bary(2);
+                }
 
-            Color c = {0, 0, 0};
-            for(int k = 0; k < 3; k++) {
-                c.bgr[k] = colA.bgr[k] * bary(0) + colB.bgr[k] * bary(1) + colC.bgr[k] * bary(2);
+                setPixel(i, j, c);
             }
-
-            setPixel(i, j, c);
         }
     }
 
