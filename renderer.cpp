@@ -11,7 +11,7 @@ void Renderer::setCameraPos(Vector4f pos)
 }
 Vector2i Renderer::project(const Vector4f& a) {
     Vector4f toBeProjected = a - camera.pos;
-    static Matrix4f proj = projMat();
+    // static Matrix4f proj = projMat();
     Matrix<float, 4, 1> d = (cameraRotation * toBeProjected);
     // Matrix<float, 4, 1> d = proj * (cameraRotation * toBeProjected);
     // if (d(3,0) != 0.0f)
@@ -20,8 +20,8 @@ Vector2i Renderer::project(const Vector4f& a) {
 	// }
     
     Vector2i b;
-    b(0) = d(0,0)*100 + 600;
-    b(1) = d(1,0)*100 + 300;
+    b(0) = d(0,0)*20 + 600;
+    b(1) = d(1,0)*20 + 300;
     b(0) = (b(0) < 0) ? std::max(b(0), -(int)width) : std::min(b(0), (int)width);
     b(1) = (b(1) < 0) ? std::max(b(1), -(int)height) : std::min(b(1), (int)height);
     return b;
@@ -159,10 +159,10 @@ void Renderer::triGradient(Vector4f pts[3], Color colA, Color colB, Color colC) 
         maxY = std::max(maxY, projected[i][1]);
     }
 
-    minX = std::max(minX, 0);
-    minY = std::max(minY, 0);
-    maxX = std::min(maxX, width);
-    maxY = std::min(maxY, height);
+    // minX = std::max(minX, 0);
+    // minY = std::max(minY, 0);
+    // maxX = std::min(maxX, width);
+    // maxY = std::min(maxY, height);
 
     for(int i = minX; i < maxX; i++) {
         for(int j = minY; j < maxY; j++) {
@@ -170,7 +170,7 @@ void Renderer::triGradient(Vector4f pts[3], Color colA, Color colB, Color colC) 
             Vector3f bary = {0, 0, 0};
             barycentric(pt, projected, bary);
 
-            if( (bary(0) + bary(1) + bary(2)) > 1.0001f ) {
+            if( (bary(0) + bary(1) + bary(2)) > 1.00001f ) {
                 continue;
             }
 
@@ -196,21 +196,18 @@ bool Renderer::dirLightColor(const Vector3f& normal, const std::vector<dirLight>
 
     c = {0, 0, 0};
 
-    if (existsPositive) {
+    if (!existsPositive) return false;
       
+    for (int i = 0, sz = intensities.size(); i < sz; i++) {
+      Color newColor = lights[i].col;
 
-      for (int i = 0, sz = intensities.size(); i < sz; i++) {
-        Color newColor = lights[i].col;
-
-        for (int j = 0; j < 3; j++) {
-          newColor.bgr[j] *= (intensities[i] > 0) ? intensities[i] : 0;
-          c.bgr[j] = (uint8_t)(std::min(((int)c.bgr[j] + (int)newColor.bgr[j]), 255));
-        }
+      for (int j = 0; j < 3; j++) {
+        newColor.bgr[j] *= (intensities[i] > 0) ? intensities[i] : 0;
+        c.bgr[j] = (uint8_t)(std::min(((int)c.bgr[j] + (int)newColor.bgr[j]), 255));
       }
-
-      return true;
     }
-    return false;
+
+    return true;
 }
 Matrix4f Renderer::transMat(Vector3f trans)
 {

@@ -68,22 +68,24 @@ int main()
   
 
   // Load object
-  Obj obj("./bunny.obj");
+  Obj obj("./teapot.obj");
 
   std::vector<Vector4f> vertices = obj.getVertices();
   std::vector<Vector4f> vertexNormals = obj.getVertexNormals();
   vec2di faces = obj.getFaceVertIds();
   vec2di faceNormals = obj.getFaceNormalIds();
 
+  for (Vector4f& norm : vertexNormals) {
+    norm.normalize();
+  }
+
   std::vector<int> faceIdx(faces.size());
-  for(int i = 0; i < faceIdx.size(); i++) {
+  for (uint i = 0; i < faceIdx.size(); i++) {
     faceIdx[i] = i;
   }
 
 
   // MAIN LOOP
-  int hw = g_width / 2;
-  int hh = g_height / 2;
   float s = 0;
 
 
@@ -105,10 +107,9 @@ int main()
       Matrix<float, 4, 1> rotatedMatNorm;
       
       rotatedMat = ( r.rotYMat(s) * r.rotXMat(3.14) ) * vertices[i];
-      rotatedMat = r.transMat({0,2,3}) * rotatedMat;
+      rotatedMat = r.transMat({0,0,3}) * rotatedMat;
 
       rotatedMatNorm = ( r.rotYMat(s) * r.rotXMat(3.14) ) * vertexNormals[i];
-      rotatedMatNorm = r.transMat({0,2,3}) * rotatedMatNorm;
       
       rotated[i] = { rotatedMat(0, 0), rotatedMat(1, 0), rotatedMat(2, 0), 1 };
       rotatedNormals[i] = { rotatedMatNorm(0, 0), rotatedMatNorm(1, 0), rotatedMatNorm(2, 0), 1 };
@@ -123,24 +124,36 @@ int main()
     } );
 
     for (const auto& id : faceIdx) {
-      std::vector<int> face = faces[id];
       Vector4f points[3];
-      Vector3f points3f[3];
+      bool toDraw = false;
+      Color colors[3];
+
+      // Vector3f points3f[3];
+
       for (int i = 0; i < 3; i++) {
-        points[i] = rotated[face[i] - 1];
-        points3f[i] = {points[i][0], points[i][1], points[i][2]};
+        points[i] = rotated[faces[id][i] - 1];
+        Vector4f n = rotatedNormals[faceNormals[id][i] - 1];
+        Vector3f normal3f = {n[0], n[1], n[2]};
+
+        toDraw |= r.dirLightColor(normal3f, lights, colors[i]);
+
+        
+        // points3f[i] = {points[i][0], points[i][1], points[i][2]};
       }
-      auto n = (points3f[2] - points3f[0]).cross((points3f[2] - points3f[1]));
-      n.normalize();
-
+      // flat shading
+      // auto n = (points3f[2] - points3f[0]).cross((points3f[2] - points3f[1]));
+      // n.normalize();
       
-      Color c;
-      if(r.dirLightColor(n, lights, c)) r.triFilled(points, c);
-    }
-    s+=0.1;
+      // Color c;
+      // if(r.dirLightColor(n, lights, c)) /*r.triFilled(points, c)*/;
 
-    Vector4f pts[3] = {{2,0,0,1}, {0,2,0,1}, {4,4,0,1}};
-    r.triGradient(pts, {255,0,0}, {0,255,0}, {0,0,255});
+      r.triGradient(points, colors[0], colors[1], colors[2]);
+
+    }
+    s += 0.01;
+
+    // Vector4f pts[3] = {{2,0,0,1}, {0,2,0,1}, {4,4,0,1}};
+    // r.triGradient(pts, {255,0,0}, {0,255,0}, {0,0,255});
   } while (mfb_wait_sync(window));
 
   return 0;

@@ -60,6 +60,7 @@ void Obj::parse(std::ifstream& file) {
     while (std::getline(file, line)) {
         
         sstream ss(line);
+        // if(ss.eof()) continue;
         std::string identifier;
         ss >> identifier;
         
