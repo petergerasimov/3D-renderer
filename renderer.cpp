@@ -1,6 +1,9 @@
 #include "renderer.hpp"
 #include <iostream>
 
+void Renderer::clearZBuff() {
+    memset(zBuffer, 0.0f, (width * height) * sizeof(float));
+}
 void Renderer::setCameraRotation(Vector4f rot) {
     camera.rot = rot;
     cameraRotation = (rotXMat(rot[0]) * rotYMat(rot[1]) * rotZMat(rot[2]));
@@ -108,7 +111,7 @@ void Renderer::triFilled(Vector4f pts[3], Color c) {
         return !(has_neg && has_pos);
     };
     for(int i = 0; i < 3; i++) {
-        if(pts[i][2] < camera.pos[2]) return;
+        // if(pts[i][2] < camera.pos[2]) return;
 
         projected[i] = project(pts[i]);
         minX = std::min(minX, projected[i][0]);
@@ -140,7 +143,7 @@ void Renderer::barycentric(const Vector2i& p, Vector2i pts[3], Vector3f& bary)
     // Make them absolute
     bary = bary.cwiseAbs();
 }
-void Renderer::triGradient(Vector4f pts[3], Color colA, Color colB, Color colC) {
+void Renderer::triGradient(Vector4f pts[3], Color cols[3]) {
     int minX = width;
     int maxX = 0;
     int minY = height;
@@ -149,7 +152,7 @@ void Renderer::triGradient(Vector4f pts[3], Color colA, Color colB, Color colC) 
     Vector2i projected[3];
 
     for(int i = 0; i < 3; i++) {
-        if(pts[i][2] < camera.pos[2]) return;
+        // if(pts[i][2] < camera.pos[2]) return;
 
         projected[i] = project(pts[i]);
 
@@ -167,11 +170,21 @@ void Renderer::triGradient(Vector4f pts[3], Color colA, Color colB, Color colC) 
 
             if( (bary(0) + bary(1) + bary(2)) <= 1.00001f ) {
                 Color c = {0, 0, 0};
+                
                 for(int k = 0; k < 3; k++) {
-                    c.bgr[k] = colA.bgr[k] * bary(0) + colB.bgr[k] * bary(1) + colC.bgr[k] * bary(2);
+                    c.bgr[k] = cols[0].bgr[k] * bary(0) + cols[1].bgr[k] * bary(1) + cols[2].bgr[k] * bary(2);
                 }
 
-                setPixel(i, j, c);
+                float pixelZ = pts[0](2) * bary(0) + pts[1](2) * bary(1) + pts[2](2) * bary(2);
+
+                int pos = j * width + i;
+
+                if (pixelZ > zBuffer[pos])
+				{
+					setPixel(i, j, c);
+					zBuffer[pos] = pixelZ;
+				}
+                
             }
         }
     }

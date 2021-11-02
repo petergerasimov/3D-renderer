@@ -44,6 +44,7 @@ class Renderer
     private:
         int width;
         int height;
+        float* zBuffer;
         float aspectRatio;
         float fov = 60;
         float zNear = 0.1f;
@@ -65,7 +66,10 @@ class Renderer
                 setCameraRotation(camera.rot);
                 // setCameraPos({ -width / 2.0f, -height / 2.0f, 0 });
                 aspectRatio = float(height) / (float)width; 
+                zBuffer = new float[width * height];
             };
+        ~Renderer() { delete[] zBuffer; }
+        void clearZBuff();
         std::function<void(int x, int y, Color)> setPixel;
         // void (*setPixel)(int, int, Color);
         std::function<void()> clear;
@@ -76,7 +80,7 @@ class Renderer
         void tri(Vector4f pts[3], Color c);
         void triFilled(Vector4f pts[3], Color c);
         void barycentric(const Vector2i& p, Vector2i pts[3], Vector3f& bary);
-        void triGradient(Vector4f pts[3], Color colA, Color colB, Color colC);
+        void triGradient(Vector4f pts[3], Color cols[3]);
         bool dirLightColor(const Vector3f& normal, const std::vector<dirLight>& lights, Color& c);
         Matrix4f transMat(Vector3f trans);
         Matrix4f scaleMat(Vector3f scale);

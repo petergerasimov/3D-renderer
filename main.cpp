@@ -93,6 +93,8 @@ int main()
   dirLight l2({0,1,1}, {0, 0, 255});
   dirLight l3({1,1,0}, {0, 255, 0});
 
+  Vector3f cameraDir = {0, 0, 1};
+
   std::vector<dirLight> lights = {l1, l2, l3};
 
   std::vector<Vector4f> rotated = vertices;
@@ -100,7 +102,7 @@ int main()
 
   do {
     r.clear();
-
+    r.clearZBuff();
     
 
     for (uint i = 0; i < vertices.size(); i++) {
@@ -116,20 +118,12 @@ int main()
       rotatedNormals[i] = { rotatedMatNorm(0, 0), rotatedMatNorm(1, 0), rotatedMatNorm(2, 0), 1 };
     }
 
-    std::sort(faceIdx.begin(), faceIdx.end(), [&](const int& aId, const int& bId) { 
-        std::vector<int>& a = faces[aId];
-        std::vector<int>& b = faces[bId];
-        float aAvg = (rotated[a[0] - 1][2] + rotated[a[1] - 1][2] + rotated[a[2] - 1][2]) / 3.0f;
-        float bAvg = (rotated[b[0] - 1][2] + rotated[b[1] - 1][2] + rotated[b[2] - 1][2]) / 3.0f;
-        return aAvg < bAvg;
-    } );
-
     for (const auto& id : faceIdx) {
       Vector4f points[3];
       bool toDraw = false;
       Color colors[3];
 
-      // Vector3f points3f[3];
+      Vector3f points3f[3];
 
       for (int i = 0; i < 3; i++) {
         points[i] = rotated[faces[id][i] - 1];
@@ -139,17 +133,24 @@ int main()
         toDraw |= r.dirLightColor(normal3f, lights, colors[i]);
 
         
-        // points3f[i] = {points[i][0], points[i][1], points[i][2]};
+        points3f[i] = {points[i][0], points[i][1], points[i][2]};
       }
-      // flat shading
-      // auto n = (points3f[2] - points3f[0]).cross((points3f[2] - points3f[1]));
-      // n.normalize();
       
-      // Color c;
-      // if(r.dirLightColor(n, lights, c)) /*r.triFilled(points, c)*/;
+      auto n = (points3f[2] - points3f[0]).cross((points3f[2] - points3f[1]));
+      n.normalize();
+      
+      // back-face culling
+      if(n.dot(cameraDir) >= 0) {
+        // flat shading
+        // Color c;
+        // if(r.dirLightColor(n, lights, c)) r.triFilled(points, c);
 
-      if(toDraw) r.triGradient(points, colors[0], colors[1], colors[2]);
-      // r.triFilled(points, colors[0]);
+        // smooth shading
+        if(toDraw) r.triGradient(points, colors);
+
+        // wireframe
+        // r.tri(points, {255, 255, 255});
+      }
 
     }
     s += 0.01;
