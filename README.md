@@ -1,3 +1,4 @@
 # 3D-renderer
 A simple software renderer that I'm making for fun (WIP).
-![teapot_new](https://user-images.githubusercontent.com/22355494/139905878-4706babf-3c06-4720-9aa4-9cf3febfdbdd.gif)
+
+![teapot_nobg](https://user-images.githubusercontent.com/22355494/139908818-fb0a72da-a655-4c22-aec2-271e8b6def47.gif)
