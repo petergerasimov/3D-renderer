@@ -58,7 +58,7 @@ class Renderer
         float fastSin(float x);
         float fastCos(float x);
     public:
-        Renderer(uint32_t width, uint32_t height, std::function<void(int x, int y, Color)> setPixel, std::function<void()> clear) :
+        Renderer(uint32_t width, uint32_t height, std::function<void(const int&, const int&, const Color&)> setPixel, std::function<void()> clear) :
             width(width),
             height(height),
             setPixel(setPixel), 
@@ -70,23 +70,23 @@ class Renderer
             };
         ~Renderer() { delete[] zBuffer; }
         void clearZBuff();
-        std::function<void(int x, int y, Color)> setPixel;
+        std::function<void(const int& x, const int& y, const Color&)> setPixel;
         // void (*setPixel)(int, int, Color);
         std::function<void()> clear;
-        void setCameraRotation(Vector4f rot);
-        void setCameraPos(Vector4f pos);
+        void setCameraRotation(const Vector4f& rot);
+        void setCameraPos(const Vector4f& pos);
         Vector2i project(const Vector4f& a);
-        void line(Vector2i a, Vector2i b, Color c);
-        void tri(Vector4f pts[3], Color c);
-        void triFilled(Vector4f pts[3], Color c);
+        void line(Vector2i a, Vector2i b,const Color& c);
+        void tri(Vector4f pts[3], const Color& c);
+        void triFilled(Vector4f pts[3], const Color& c);
         void barycentric(const Vector2i& p, Vector2i pts[3], Vector3f& bary);
         void triGradient(Vector4f pts[3], Color cols[3]);
         bool dirLightColor(const Vector3f& normal, const std::vector<dirLight>& lights, Color& c);
-        Matrix4f transMat(Vector3f trans);
-        Matrix4f scaleMat(Vector3f scale);
-        Matrix4f rotXMat(float angle);
-        Matrix4f rotYMat(float angle);
-        Matrix4f rotZMat(float angle);
+        Matrix4f transMat(const Vector3f& trans);
+        Matrix4f scaleMat(const Vector3f& scale);
+        Matrix4f rotXMat(const float& angle);
+        Matrix4f rotYMat(const float& angle);
+        Matrix4f rotZMat(const float& angle);
         Matrix4f projMat();
 };
 

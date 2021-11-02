@@ -49,7 +49,7 @@ int main()
       g_width,
       g_height,
       //set pixel
-      [](int x, int y, Color color) {
+      [](const int& x, const int& y, const Color& color) {
         if(y >= 0 && y < (int)g_height && x >= 0 && x < (int)g_width) {
           g_buffer[y * g_width + x] = color.i;
         }
@@ -61,14 +61,14 @@ int main()
           window = 0x0;
           exit(0);
         }
-        memset(g_buffer, 0, g_width * g_height * sizeof(*g_buffer));
+        memset(g_buffer, 128, g_width * g_height * sizeof(*g_buffer));
       }
   );
   
   
 
   // Load object
-  Obj obj("./teapot.obj");
+  Obj obj("./bunny.obj");
 
   std::vector<Vector4f> vertices = obj.getVertices();
   std::vector<Vector4f> vertexNormals = obj.getVertexNormals();
@@ -78,12 +78,6 @@ int main()
   for (Vector4f& norm : vertexNormals) {
     norm.normalize();
   }
-
-  std::vector<int> faceIdx(faces.size());
-  for (uint i = 0; i < faceIdx.size(); i++) {
-    faceIdx[i] = i;
-  }
-
 
   // MAIN LOOP
   float s = 0;
@@ -109,31 +103,33 @@ int main()
       Matrix<float, 4, 1> rotatedMat;
       Matrix<float, 4, 1> rotatedMatNorm;
       
-      rotatedMat = ( r.rotYMat(s) * r.rotXMat(3.14) ) * vertices[i];
+      auto rot = r.rotYMat(s) * r.rotXMat(3.14);
+
+      rotatedMat = rot * vertices[i];
       rotatedMat = r.transMat({0,0,3}) * rotatedMat;
 
-      rotatedMatNorm = ( r.rotYMat(s) * r.rotXMat(3.14) ) * vertexNormals[i];
+      rotatedMatNorm = rot * vertexNormals[i];
       
       rotated[i] = { rotatedMat(0, 0), rotatedMat(1, 0), rotatedMat(2, 0), 1 };
       rotatedNormals[i] = { rotatedMatNorm(0, 0), rotatedMatNorm(1, 0), rotatedMatNorm(2, 0), 1 };
     }
 
-    for (const auto& id : faceIdx) {
+    for (int i = 0, sz = faces.size(); i < sz; i++) {
       Vector4f points[3];
       bool toDraw = false;
       Color colors[3];
 
       Vector3f points3f[3];
 
-      for (int i = 0; i < 3; i++) {
-        points[i] = rotated[faces[id][i] - 1];
-        Vector4f n = rotatedNormals[faceNormals[id][i] - 1];
+      for (int j = 0; j < 3; j++) {
+        points[j] = rotated[faces[i][j] - 1];
+        Vector4f n = rotatedNormals[faceNormals[i][j] - 1];
         Vector3f normal3f = {n[0], n[1], n[2]};
 
-        toDraw |= r.dirLightColor(normal3f, lights, colors[i]);
+        toDraw |= r.dirLightColor(normal3f, lights, colors[j]);
 
         
-        points3f[i] = {points[i][0], points[i][1], points[i][2]};
+        points3f[j] = {points[j][0], points[j][1], points[j][2]};
       }
       
       auto n = (points3f[2] - points3f[0]).cross((points3f[2] - points3f[1]));
@@ -153,7 +149,7 @@ int main()
       }
 
     }
-    s += 0.01;
+    s += 0.1;
 
     // Vector4f pts[3] = {{2,0,0,1}, {0,2,0,1}, {4,4,0,1}};
     // r.triGradient(pts, {255,0,0}, {0,255,0}, {0,0,255});

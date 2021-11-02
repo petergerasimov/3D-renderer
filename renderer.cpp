@@ -4,11 +4,11 @@
 void Renderer::clearZBuff() {
     memset(zBuffer, 0.0f, (width * height) * sizeof(float));
 }
-void Renderer::setCameraRotation(Vector4f rot) {
+void Renderer::setCameraRotation(const Vector4f& rot) {
     camera.rot = rot;
     cameraRotation = (rotXMat(rot[0]) * rotYMat(rot[1]) * rotZMat(rot[2]));
 }
-void Renderer::setCameraPos(Vector4f pos)
+void Renderer::setCameraPos(const Vector4f& pos)
 {
     camera.pos = pos;
 }
@@ -23,13 +23,13 @@ Vector2i Renderer::project(const Vector4f& a) {
 	// }
     
     Vector2i b;
-    b(0) = d(0,0)*20 + 600;
-    b(1) = d(1,0)*20 + 300;
+    b(0) = d(0,0)*100 + 600;
+    b(1) = d(1,0)*100 + 300;
     b(0) = (b(0) < 0) ? std::max(b(0), -(int)width) : std::min(b(0), (int)width);
     b(1) = (b(1) < 0) ? std::max(b(1), -(int)height) : std::min(b(1), (int)height);
     return b;
 }
-void Renderer::line(Vector2i a, Vector2i b, Color c)
+void Renderer::line(Vector2i a, Vector2i b, const Color& c)
 {
     // http://www.edepot.com/linee.html
     bool yLonger = false;
@@ -76,7 +76,7 @@ void Renderer::line(Vector2i a, Vector2i b, Color c)
 		j-=decInc;
 	}
 }
-void Renderer::tri(Vector4f pts[3], Color color)
+void Renderer::tri(Vector4f pts[3], const Color& color)
 {
     Vector2i a = project(pts[0]);
     Vector2i b = project(pts[1]);
@@ -85,7 +85,7 @@ void Renderer::tri(Vector4f pts[3], Color color)
     line(b, c, color);
     line(c, a, color);
 }
-void Renderer::triFilled(Vector4f pts[3], Color c) {
+void Renderer::triFilled(Vector4f pts[3], const Color& c) {
     int minX = width;
     int maxX = 0;
     int minY = height;
@@ -215,7 +215,7 @@ bool Renderer::dirLightColor(const Vector3f& normal, const std::vector<dirLight>
 
     return true;
 }
-Matrix4f Renderer::transMat(Vector3f trans)
+Matrix4f Renderer::transMat(const Vector3f& trans)
 {
     Matrix4f toReturn {
         {1,0,0,trans(0)},
@@ -226,7 +226,7 @@ Matrix4f Renderer::transMat(Vector3f trans)
     return toReturn;
 
 }
-Matrix4f Renderer::scaleMat(Vector3f scale)
+Matrix4f Renderer::scaleMat(const Vector3f& scale)
 {
     Matrix4f toReturn {
         {scale(0),0,0,0},
@@ -236,7 +236,7 @@ Matrix4f Renderer::scaleMat(Vector3f scale)
     };
     return toReturn;
 }
-Matrix4f Renderer::rotXMat(float angle)
+Matrix4f Renderer::rotXMat(const float& angle)
 {
     
     float s = fastSin(angle);
@@ -249,7 +249,7 @@ Matrix4f Renderer::rotXMat(float angle)
     };
     return toReturn;
 }
-Matrix4f Renderer::rotYMat(float angle)
+Matrix4f Renderer::rotYMat(const float& angle)
 {
     float s = fastSin(angle);
     float c = fastCos(angle);
@@ -261,7 +261,7 @@ Matrix4f Renderer::rotYMat(float angle)
     };
     return toReturn;
 }
-Matrix4f Renderer::rotZMat(float angle)
+Matrix4f Renderer::rotZMat(const float& angle)
 {
     
     float s = fastSin(angle);
