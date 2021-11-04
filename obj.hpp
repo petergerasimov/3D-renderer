@@ -14,6 +14,7 @@ class Obj {
     private:
         std::vector<Vector4f> vertices;
         std::vector<Vector4f> vertexNormals;
+        std::vector<Vector2f> uv;
         vec2di faceVertIds;
         vec2di faceNormalIds;
         vec2di faceTextureIds;
@@ -22,6 +23,7 @@ class Obj {
         Obj(std::string path);
         std::vector<Vector4f> getVertices();
         std::vector<Vector4f> getVertexNormals();
+        std::vector<Vector2f> getUVs();
         vec2di getFaceVertIds();
         vec2di getFaceNormalIds();
         vec2di getFaceTextureIds();

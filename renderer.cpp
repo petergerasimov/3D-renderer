@@ -1,8 +1,13 @@
 #include "renderer.hpp"
 #include <iostream>
+#include <limits>
 
 void Renderer::clearZBuff() {
-    memset(zBuffer, 0.0f, (width * height) * sizeof(float));
+    const float min = -std::numeric_limits<float>::max();
+    
+    // memset(zBuffer, d.i, (width * height) * sizeof(*zBuffer));
+    std::fill(zBuffer, zBuffer + (width * height), min);
+    // std::cout << zBuffer[0] << std::endl;
 }
 void Renderer::setCameraRotation(const Vector4f& rot) {
     camera.rot = rot;
@@ -12,13 +17,14 @@ void Renderer::setCameraPos(const Vector4f& pos)
 {
     camera.pos = pos;
 }
-Vector2i Renderer::project(Vector4f a) {
-    a -= camera.pos;
+Vector2i Renderer::project(Vector4f a, float& w) {
+    // a -= camera.pos;
     const static Matrix4f proj = projMat();
-    // Matrix<float, 4, 1> d = (cameraRotation * toBeProjected);
-    a = proj * (cameraRotation * a);
-    
-    a /= a(3);
+    // a = proj * (cameraRotation * a);
+    a = proj * a;
+
+    w = a(3);
+    a /= w;
     a(0) *= -1;
     a(1) *= -1;
 
@@ -156,11 +162,12 @@ void Renderer::triGradient(Vector4f pts[3], Color cols[3]) {
     int maxY = 0;
 
     Vector2i projected[3];
+    float w[3] = { 0, };
 
     for(int i = 0; i < 3; i++) {
         // if(pts[i][2] < camera.pos[2]) return;
-
-        projected[i] = project(pts[i]);
+        
+        projected[i] = project(pts[i], w[i]);
 
         minX = std::min(minX, projected[i][0]);
         maxX = std::max(maxX, projected[i][0]);
@@ -181,8 +188,59 @@ void Renderer::triGradient(Vector4f pts[3], Color cols[3]) {
                     c.bgr[k] = cols[0].bgr[k] * bary(0) + cols[1].bgr[k] * bary(1) + cols[2].bgr[k] * bary(2);
                 }
 
-                float pixelZ = pts[0](2) * bary(0) + pts[1](2) * bary(1) + pts[2](2) * bary(2);
-                // float pixelZ = pts[0](3) * bary(0) + pts[1](3) * bary(1) + pts[2](3) * bary(2);
+                // float pixelZ = pts[0](2) * bary(0) + pts[1](2) * bary(1) + pts[2](2) * bary(2);
+                float pixelZ = w[0] * bary(0) + w[1] * bary(1) + w[2] * bary(2);
+                // std::cout << zBuffer[0] << std::endl;
+
+                int pos = j * width + i;
+
+                if (pixelZ > zBuffer[pos])
+				{
+					setPixel(i, j, c);
+					zBuffer[pos] = pixelZ;
+				}
+                
+            }
+        }
+    }
+
+}
+void Renderer::triTextured(Vector4f pts[3], Color cols[3]) {
+    int minX = width;
+    int maxX = 0;
+    int minY = height;
+    int maxY = 0;
+
+    Vector2i projected[3];
+    float w[3] = { 0, };
+
+    for(int i = 0; i < 3; i++) {
+        // if(pts[i][2] < camera.pos[2]) return;
+        
+        projected[i] = project(pts[i], w[i]);
+
+        minX = std::min(minX, projected[i][0]);
+        maxX = std::max(maxX, projected[i][0]);
+        minY = std::min(minY, projected[i][1]);
+        maxY = std::max(maxY, projected[i][1]);
+    }
+
+    for(int i = minX; i < maxX; i++) {
+        for(int j = minY; j < maxY; j++) {
+            Vector2i pt = {i, j};
+            Vector3f bary = {0, 0, 0};
+            barycentric(pt, projected, bary);
+
+            if( (bary(0) + bary(1) + bary(2)) <= 1.00001f ) {
+                Color c = {0, 0, 0};
+                
+                for(int k = 0; k < 3; k++) {
+                    c.bgr[k] = cols[0].bgr[k] * bary(0) + cols[1].bgr[k] * bary(1) + cols[2].bgr[k] * bary(2);
+                }
+
+                // float pixelZ = pts[0](2) * bary(0) + pts[1](2) * bary(1) + pts[2](2) * bary(2);
+                float pixelZ = w[0] * bary(0) + w[1] * bary(1) + w[2] * bary(2);
+                // std::cout << zBuffer[0] << std::endl;
 
                 int pos = j * width + i;
 
@@ -246,8 +304,8 @@ Matrix4f Renderer::scaleMat(const Vector3f& scale)
 Matrix4f Renderer::rotXMat(const float& angle)
 {
     
-    float s = fastSin(angle);
-    float c = fastCos(angle);
+    float s = sinf(angle);
+    float c = cosf(angle);
     Matrix4f toReturn {
         {1,0, 0,0},
         {0,c,-s,0},
@@ -258,8 +316,8 @@ Matrix4f Renderer::rotXMat(const float& angle)
 }
 Matrix4f Renderer::rotYMat(const float& angle)
 {
-    float s = fastSin(angle);
-    float c = fastCos(angle);
+    float s = sinf(angle);
+    float c = cosf(angle);
     Matrix4f toReturn {
         { c,0,s,0},
         { 0,1,0,0},
@@ -271,8 +329,8 @@ Matrix4f Renderer::rotYMat(const float& angle)
 Matrix4f Renderer::rotZMat(const float& angle)
 {
     
-    float s = fastSin(angle);
-    float c = fastCos(angle);
+    float s = sinf(angle);
+    float c = cosf(angle);
     Matrix4f toReturn {
         {c,-s,0,0},
         {s, c,0,0},
@@ -289,7 +347,7 @@ Matrix4f Renderer::projMat()
         {aspectRatio * invTan,0     ,0                    ,0},
         {0                   ,invTan,0                    ,0},
         {0                   ,0     ,zFar / (zFar - zNear),1},
-        {0                   ,0,(-zFar*zNear) / (zFar - zNear),0}
+        {0                   ,0,(-zFar * zNear) / (zFar - zNear),0}
     };
     return toReturn;
 }

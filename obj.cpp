@@ -23,6 +23,15 @@ void Obj::parse(std::ifstream& file) {
             v.back()(i) = current;
         }
     };
+    std::function<void(sstream& ss, std::vector<Vector2f>& uv)> addUV = [&](sstream& ss, std::vector<Vector2f>& uv) {
+        Vector2f empty = {0,0};
+        uv.push_back(empty);
+        for (int i = 0; !ss.eof(); i++) {
+            float current;
+            ss >> current;
+            uv.back()(i) = current;
+        }
+    };
     std::function<void(sstream& ss)> addFaces = [&](sstream& ss) {
         std::vector<int> empty;
 
@@ -66,6 +75,7 @@ void Obj::parse(std::ifstream& file) {
         
         if(!identifier.compare("v")) addVertices(ss, vertices);
         if(!identifier.compare("vn")) addVertices(ss, vertexNormals);
+        if(!identifier.compare("vt")) addUV(ss, uv);
         if(!identifier.compare("f")) addFaces(ss);
         
     }
@@ -78,6 +88,10 @@ std::vector<Vector4f> Obj::getVertices()
 std::vector<Vector4f> Obj::getVertexNormals()
 {
     return vertexNormals;
+}
+std::vector<Vector2f> Obj::getUVs()
+{
+    return uv;
 }
 vec2di Obj::getFaceVertIds()
 {

@@ -3,6 +3,7 @@
 #include "obj.hpp"
 #include <eigen3/Eigen/Dense>
 #include <eigen3/Eigen/Geometry>
+#include "imageloader.hpp"
 
 using namespace Eigen;
 
@@ -70,10 +71,20 @@ int main()
   // Load object
   Obj obj("./teapot.obj");
 
+  // Load png
+  Image img("texture.png");
+  std::cout << img.width << " " << img.height << std::endl;
+
+  //
+
+
+
   std::vector<Vector4f> vertices = obj.getVertices();
   std::vector<Vector4f> vertexNormals = obj.getVertexNormals();
+  std::vector<Vector2f> uvs = obj.getUVs();
   vec2di faces = obj.getFaceVertIds();
   vec2di faceNormals = obj.getFaceNormalIds();
+  vec2di faceUvs = obj.getFaceTextureIds();
 
   for (Vector4f& norm : vertexNormals) {
     norm.normalize();
@@ -83,9 +94,9 @@ int main()
   float s = 0;
 
 
-  dirLight l1({0,0,1}, {255, 0, 0}); 
-  dirLight l2({0,1,1}, {0, 0, 255});
-  dirLight l3({1,1,0}, {0, 255, 0});
+  dirLight l1({0,0,-1}, {255, 0, 0}); 
+  dirLight l2({0,-1,-1}, {0, 0, 255});
+  dirLight l3({-1,-1,0}, {0, 255, 0});
 
   Vector3f cameraDir = {0, 0, 1};
 
@@ -109,7 +120,7 @@ int main()
       auto rot = r.rotYMat(s) * r.rotXMat(PI);
 
       rotatedMat = rot * vertices[i];
-      rotatedMat = r.transMat({0,0,250}) * rotatedMat;
+      rotatedMat = r.transMat({0,20,200}) * rotatedMat;
 
       rotatedMatNorm = rot * vertexNormals[i];
       
