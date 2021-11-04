@@ -46,7 +46,7 @@ class Renderer
         int height;
         float* zBuffer;
         float aspectRatio;
-        float fov = 60;
+        float fov = 90;
         float zNear = 0.1f;
         float zFar = 1000.0f;
         Camera camera {

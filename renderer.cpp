@@ -14,17 +14,23 @@ void Renderer::setCameraPos(const Vector4f& pos)
 }
 Vector2i Renderer::project(const Vector4f& a) {
     Vector4f toBeProjected = a - camera.pos;
-    // static Matrix4f proj = projMat();
-    Matrix<float, 4, 1> d = (cameraRotation * toBeProjected);
-    // Matrix<float, 4, 1> d = proj * (cameraRotation * toBeProjected);
-    // if (d(3,0) != 0.0f)
-	// {
-	// 	d(0,0) /= d(3,0); d(1,0) /= d(3,0); d(2,0) /= d(3,0);
-	// }
+    const static Matrix4f proj = projMat();
+    // Matrix<float, 4, 1> d = (cameraRotation * toBeProjected);
+    Matrix<float, 4, 1> d = proj * (cameraRotation * toBeProjected);
     
+    d /= d(3);
+    d(0) *= -1;
+    d(1) *= -1;
+
+    Vector4f offset = {1, 1, 0 , 0};
+    d += offset;
+
+    d(0) *= 0.5f * width; 
+    d(1) *= 0.5f * height; 
+
     Vector2i b;
-    b(0) = d(0,0)*100 + 600;
-    b(1) = d(1,0)*100 + 300;
+    b(0) = d(0);
+    b(1) = d(1);
     b(0) = (b(0) < 0) ? std::max(b(0), -(int)width) : std::min(b(0), (int)width);
     b(1) = (b(1) < 0) ? std::max(b(1), -(int)height) : std::min(b(1), (int)height);
     return b;
@@ -176,6 +182,7 @@ void Renderer::triGradient(Vector4f pts[3], Color cols[3]) {
                 }
 
                 float pixelZ = pts[0](2) * bary(0) + pts[1](2) * bary(1) + pts[2](2) * bary(2);
+                // float pixelZ = pts[0](3) * bary(0) + pts[1](3) * bary(1) + pts[2](3) * bary(2);
 
                 int pos = j * width + i;
 
@@ -208,7 +215,7 @@ bool Renderer::dirLightColor(const Vector3f& normal, const std::vector<dirLight>
       Color newColor = lights[i].col;
 
       for (int j = 0; j < 3; j++) {
-        newColor.bgr[j] *= (intensities[i] > 0) ? intensities[i] : 0;
+        newColor.bgr[j] *= std::min( std::max(intensities[i], 0.0f), 1.0f);
         c.bgr[j] = (uint8_t)(std::min(((int)c.bgr[j] + (int)newColor.bgr[j]), 255));
       }
     }

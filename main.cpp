@@ -61,14 +61,14 @@ int main()
           window = 0x0;
           exit(0);
         }
-        memset(g_buffer, 128, g_width * g_height * sizeof(*g_buffer));
+        memset(g_buffer, 255, g_width * g_height * sizeof(*g_buffer));
       }
   );
   
   
 
   // Load object
-  Obj obj("./bunny.obj");
+  Obj obj("./teapot.obj");
 
   std::vector<Vector4f> vertices = obj.getVertices();
   std::vector<Vector4f> vertexNormals = obj.getVertexNormals();
@@ -103,10 +103,10 @@ int main()
       Matrix<float, 4, 1> rotatedMat;
       Matrix<float, 4, 1> rotatedMatNorm;
       
-      auto rot = r.rotYMat(s) * r.rotXMat(3.14);
+      auto rot = r.rotYMat(s) * r.rotXMat(3.14) * r.rotXMat(s) * r.rotZMat(s);
 
       rotatedMat = rot * vertices[i];
-      rotatedMat = r.transMat({0,0,3}) * rotatedMat;
+      rotatedMat = r.transMat({0,0,250}) * rotatedMat;
 
       rotatedMatNorm = rot * vertexNormals[i];
       
@@ -142,14 +142,14 @@ int main()
         // if(r.dirLightColor(n, lights, c)) r.triFilled(points, c);
 
         // smooth shading
-        if(toDraw) r.triGradient(points, colors);
+        r.triGradient(points, colors);
 
         // wireframe
-        // r.tri(points, {255, 255, 255});
+        // r.tri(points, {0, 0, 0});
       }
 
     }
-    s += 0.1;
+    s += 0.01;
 
     // Vector4f pts[3] = {{2,0,0,1}, {0,2,0,1}, {4,4,0,1}};
     // r.triGradient(pts, {255,0,0}, {0,255,0}, {0,0,255});
