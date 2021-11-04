@@ -3,7 +3,6 @@
 #include "obj.hpp"
 #include <eigen3/Eigen/Dense>
 #include <eigen3/Eigen/Geometry>
-#include "imageloader.hpp"
 
 using namespace Eigen;
 
@@ -117,7 +116,7 @@ int main()
       Matrix<float, 4, 1> rotatedMatNorm;
       
       // auto rot = r.rotYMat(s) * r.rotXMat(3.14) * r.rotXMat(s) * r.rotZMat(s);
-      auto rot = r.rotYMat(s) * r.rotXMat(PI);
+      auto rot = r.rotXMat(PI) * r.rotXMat(s);
 
       rotatedMat = rot * vertices[i];
       rotatedMat = r.transMat({0,20,200}) * rotatedMat;
@@ -134,6 +133,7 @@ int main()
       Color colors[3];
 
       Vector3f points3f[3];
+      Vector2f uvPts[3];
 
       for (int j = 0; j < 3; j++) {
         points[j] = rotated[faces[i][j] - 1];
@@ -144,6 +144,7 @@ int main()
 
         
         points3f[j] = {points[j][0], points[j][1], points[j][2]};
+        uvPts[j] = uvs[faceUvs[i][j] - 1];
       }
       
       auto n = (points3f[2] - points3f[0]).cross((points3f[2] - points3f[1]));
@@ -157,7 +158,8 @@ int main()
         // if(r.dirLightColor(n, lights, c)) r.triFilled(points, c);
 
         // smooth shading
-        r.triGradient(points, colors);
+        // r.triGradient(points, colors);
+        r.triTextured(points, colors, uvPts, img);
 
         // wireframe
         // r.tri(points, {0, 0, 0});

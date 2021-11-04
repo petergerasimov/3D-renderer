@@ -205,7 +205,7 @@ void Renderer::triGradient(Vector4f pts[3], Color cols[3]) {
     }
 
 }
-void Renderer::triTextured(Vector4f pts[3], Color cols[3]) {
+void Renderer::triTextured(Vector4f pts[3], Color cols[3], Vector2f uv[3], Image& img) {
     int minX = width;
     int maxX = 0;
     int minY = height;
@@ -234,12 +234,19 @@ void Renderer::triTextured(Vector4f pts[3], Color cols[3]) {
             if( (bary(0) + bary(1) + bary(2)) <= 1.00001f ) {
                 Color c = {0, 0, 0};
                 
+                Vector2f pUV = uv[0] * bary(0) + uv[1] * bary(1) + uv[2] * bary(2);
+                int u = pUV(0)*img.width;
+                int v = pUV(1)*img.height;
+                Color tc = img.imgData[v*img.width + u];
+                // c = tc;
                 for(int k = 0; k < 3; k++) {
-                    c.bgr[k] = cols[0].bgr[k] * bary(0) + cols[1].bgr[k] * bary(1) + cols[2].bgr[k] * bary(2);
+                    float tcf = tc.bgr[k] / 255.0f;
+                    c.bgr[k] = (cols[0].bgr[k] * bary(0) + cols[1].bgr[k] * bary(1) + cols[2].bgr[k] * bary(2)) * tcf;
                 }
 
                 // float pixelZ = pts[0](2) * bary(0) + pts[1](2) * bary(1) + pts[2](2) * bary(2);
                 float pixelZ = w[0] * bary(0) + w[1] * bary(1) + w[2] * bary(2);
+                
                 // std::cout << zBuffer[0] << std::endl;
 
                 int pos = j * width + i;
