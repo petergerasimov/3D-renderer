@@ -12,25 +12,25 @@ void Renderer::setCameraPos(const Vector4f& pos)
 {
     camera.pos = pos;
 }
-Vector2i Renderer::project(const Vector4f& a) {
-    Vector4f toBeProjected = a - camera.pos;
+Vector2i Renderer::project(Vector4f a) {
+    a -= camera.pos;
     const static Matrix4f proj = projMat();
     // Matrix<float, 4, 1> d = (cameraRotation * toBeProjected);
-    Matrix<float, 4, 1> d = proj * (cameraRotation * toBeProjected);
+    a = proj * (cameraRotation * a);
     
-    d /= d(3);
-    d(0) *= -1;
-    d(1) *= -1;
+    a /= a(3);
+    a(0) *= -1;
+    a(1) *= -1;
 
     Vector4f offset = {1, 1, 0 , 0};
-    d += offset;
+    a += offset;
 
-    d(0) *= 0.5f * width; 
-    d(1) *= 0.5f * height; 
+    a(0) *= 0.5f * width; 
+    a(1) *= 0.5f * height; 
 
     Vector2i b;
-    b(0) = d(0);
-    b(1) = d(1);
+    b(0) = a(0);
+    b(1) = a(1);
     b(0) = (b(0) < 0) ? std::max(b(0), -(int)width) : std::min(b(0), (int)width);
     b(1) = (b(1) < 0) ? std::max(b(1), -(int)height) : std::min(b(1), (int)height);
     return b;

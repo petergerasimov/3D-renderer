@@ -94,6 +94,8 @@ int main()
   std::vector<Vector4f> rotated = vertices;
   std::vector<Vector4f> rotatedNormals = vertexNormals;
 
+  const bool enableCulling = false;
+
   do {
     r.clear();
     r.clearZBuff();
@@ -103,7 +105,8 @@ int main()
       Matrix<float, 4, 1> rotatedMat;
       Matrix<float, 4, 1> rotatedMatNorm;
       
-      auto rot = r.rotYMat(s) * r.rotXMat(3.14) * r.rotXMat(s) * r.rotZMat(s);
+      // auto rot = r.rotYMat(s) * r.rotXMat(3.14) * r.rotXMat(s) * r.rotZMat(s);
+      auto rot = r.rotYMat(s) * r.rotXMat(PI);
 
       rotatedMat = rot * vertices[i];
       rotatedMat = r.transMat({0,0,250}) * rotatedMat;
@@ -136,7 +139,8 @@ int main()
       n.normalize();
       
       // back-face culling
-      if(n.dot(cameraDir) >= 0) {
+      
+      if(n.dot(cameraDir) >= 0 || !enableCulling) {
         // flat shading
         // Color c;
         // if(r.dirLightColor(n, lights, c)) r.triFilled(points, c);

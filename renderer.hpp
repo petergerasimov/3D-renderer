@@ -46,11 +46,11 @@ class Renderer
         int height;
         float* zBuffer;
         float aspectRatio;
-        float fov = 90;
+        float fov = 60;
         float zNear = 0.1f;
         float zFar = 1000.0f;
         Camera camera {
-            { 0.0f, 0.0f, 0.0f, 1.0f },
+            { 0.0f, 0.0f, 0.0f, 0.0f },
             { 0.0f, 0.0f, 0.0f, 1.0f }
         };
         Vector3f displaySeurfacePos = { 1.0f, 1.0f, 1.0f };
@@ -75,7 +75,7 @@ class Renderer
         std::function<void()> clear;
         void setCameraRotation(const Vector4f& rot);
         void setCameraPos(const Vector4f& pos);
-        Vector2i project(const Vector4f& a);
+        Vector2i project(Vector4f a);
         void line(Vector2i a, Vector2i b,const Color& c);
         void tri(Vector4f pts[3], const Color& c);
         void triFilled(Vector4f pts[3], const Color& c);
