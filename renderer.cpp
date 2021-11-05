@@ -98,51 +98,8 @@ void Renderer::tri(Vector4f pts[3], const Color& color)
     line(c, a, color);
 }
 void Renderer::triFilled(Vector4f pts[3], const Color& c) {
-    int minX = width;
-    int maxX = 0;
-    int minY = height;
-    int maxY = 0;
-    Vector2i projected[3];
-    // https://stackoverflow.com/questions/2049582/how-to-determine-if-a-point-is-in-a-2d-triangle
-    const static std::function<float(Vector2i p1, Vector2i p2, Vector2i p3)> sign = 
-    [](Vector2i p1, Vector2i p2, Vector2i p3) {
-        return (p1[0] - p3[0]) * (p2[1] - p3[1]) - (p2[0] - p3[0]) * (p1[1] - p3[1]);
-    };
-    const static std::function<bool(Vector2i pt, Vector2i v1, Vector2i v2, Vector2i v3)> pointInTri = 
-    [&](Vector2i pt, Vector2i v1, Vector2i v2, Vector2i v3) {
-        float d1, d2, d3;
-        bool has_neg, has_pos;
-
-        d1 = sign(pt, v1, v2);
-        d2 = sign(pt, v2, v3);
-        d3 = sign(pt, v3, v1);
-
-        has_neg = (d1 < 0) || (d2 < 0) || (d3 < 0);
-        has_pos = (d1 > 0) || (d2 > 0) || (d3 > 0);
-
-        return !(has_neg && has_pos);
-    };
-    for(int i = 0; i < 3; i++) {
-        // if(pts[i][2] < camera.pos[2]) return;
-
-        projected[i] = project(pts[i]);
-        minX = std::min(minX, projected[i][0]);
-        maxX = std::max(maxX, projected[i][0]);
-        minY = std::min(minY, projected[i][1]);
-        maxY = std::max(maxY, projected[i][1]);
-    }
-    minX = std::max(minX, 0);
-    minY = std::max(minY, 0);
-    maxX = std::min(maxX, width);
-    maxY = std::min(maxY, height);
-    for(int i = minX; i < maxX; i++) {
-        for(int j = minY; j < maxY; j++) {
-            Vector2i pt = {i, j};
-            if( pointInTri(pt, projected[0], projected[1], projected[2]) ) {
-                setPixel(i, j, c);
-            }
-        }
-    }
+    Color cols[3] = {c, c, c};
+    triGradient(pts, cols);
 }
 // https://gamedev.stackexchange.com/questions/23743/whats-the-most-efficient-way-to-find-barycentric-coordinates
 void Renderer::barycentric(const Vector2i& p, Vector2i pts[3], Vector3f& bary)
@@ -255,19 +212,19 @@ void Renderer::triTextured(Vector4f pts[3], Color cols[3], Vector2f uv[3], Image
     }
 
 }
-bool Renderer::dirLightColor(const Vector3f& normal, const std::vector<dirLight>& lights, Color& c) {
+Color Renderer::dirLightColor(const Vector4f& normal, const std::vector<dirLight>& lights) {
     std::vector<float> intensities;
     bool existsPositive = false;
 
     for (auto& light : lights) {
-        float intensity = normal.dot(light.getPos());
+        float intensity = normal.dot(light.getDir());
         intensities.push_back(intensity);
         existsPositive |= (intensity > 0);
     }
 
-    c = {0, 0, 0};
+    Color c = {0, 0, 0};
 
-    if (!existsPositive) return false;
+    if (!existsPositive) return c;
       
     for (int i = 0, sz = intensities.size(); i < sz; i++) {
       Color newColor = lights[i].col;
@@ -278,7 +235,7 @@ bool Renderer::dirLightColor(const Vector3f& normal, const std::vector<dirLight>
       }
     }
 
-    return true;
+    return c;
 }
 Matrix4f Renderer::transMat(const Vector3f& trans)
 {

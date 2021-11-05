@@ -85,91 +85,66 @@ int main()
   vec2di faceNormals = obj.getFaceNormalIds();
   vec2di faceUvs = obj.getFaceTextureIds();
 
+  // Make sure all normals are normalized
   for (Vector4f& norm : vertexNormals) {
+    norm(3) = 0;
     norm.normalize();
   }
 
   // MAIN LOOP
   float s = 0;
 
+  // Add directional lights
+  dirLight l1({0,0,-1, 0}, {255, 255, 255}); 
+  dirLight l2({0,-1,-1, 0}, {0, 0, 255});
+  dirLight l3({-1,-1,0, 0}, {0, 255, 0});
+  std::vector<dirLight> lights = {l1, l2, l3};
 
-  dirLight l1({0,0,-1}, {255, 255, 255}); 
-  dirLight l2({0,-1,-1}, {0, 0, 255});
-  dirLight l3({-1,-1,0}, {0, 255, 0});
-
-  Vector3f cameraDir = {0, 0, 1};
-
-  std::vector<dirLight> lights = {l1};
+  Vector4f cameraDir = {0, 0, -1, 0};
 
   std::vector<Vector4f> rotated = vertices;
   std::vector<Vector4f> rotatedNormals = vertexNormals;
 
-  const bool enableCulling = false;
+  const bool enableCulling = true;
 
   do {
     r.clear();
     r.clearZBuff();
     
 
+    // Rotate model
     for (uint i = 0; i < vertices.size(); i++) {
-      Matrix<float, 4, 1> rotatedMat;
-      Matrix<float, 4, 1> rotatedMatNorm;
-      
-      // auto rot = r.rotYMat(s) * r.rotXMat(3.14) * r.rotXMat(s) * r.rotZMat(s);
-      auto rot = r.rotXMat(PI) * r.rotXMat(s);
+      Matrix4f rot = r.rotXMat(PI) * r.rotXMat(s);
 
-      rotatedMat = rot * vertices[i];
-      rotatedMat = r.transMat({0,20,200}) * rotatedMat;
+      rotated[i] = rot * vertices[i]; // Rotate first
+      rotated[i] = r.transMat({0,20,200}) * rotated[i]; // Translate
 
-      rotatedMatNorm = rot * vertexNormals[i];
-      
-      rotated[i] = { rotatedMat(0, 0), rotatedMat(1, 0), rotatedMat(2, 0), 1 };
-      rotatedNormals[i] = { rotatedMatNorm(0, 0), rotatedMatNorm(1, 0), rotatedMatNorm(2, 0), 1 };
+      rotatedNormals[i] = rot * vertexNormals[i]; // Rotate normals
     }
 
+    // Draw faces
     for (int i = 0, sz = faces.size(); i < sz; i++) {
       Vector4f points[3];
-      bool toDraw = false;
       Color colors[3];
-
-      Vector3f points3f[3];
       Vector2f uvPts[3];
 
       for (int j = 0; j < 3; j++) {
         points[j] = rotated[faces[i][j] - 1];
-        Vector4f n = rotatedNormals[faceNormals[i][j] - 1];
-        Vector3f normal3f = {n[0], n[1], n[2]};
-
-        toDraw |= r.dirLightColor(normal3f, lights, colors[j]);
-
-        
-        points3f[j] = {points[j][0], points[j][1], points[j][2]};
+        colors[j] = r.dirLightColor(rotatedNormals[faceNormals[i][j] - 1], lights);        
         uvPts[j] = uvs[faceUvs[i][j] - 1];
       }
       
-      auto n = (points3f[2] - points3f[0]).cross((points3f[2] - points3f[1]));
+      Vector4f n = (points[2] - points[0]).cross3((points[2] - points[1]));
+      n(3) = 0; // just making sure :DD
       n.normalize();
       
       // back-face culling
-      
       if(n.dot(cameraDir) >= 0 || !enableCulling) {
-        // flat shading
-        // Color c;
-        // if(r.dirLightColor(n, lights, c)) r.triFilled(points, c);
-
-        // smooth shading
-        // r.triGradient(points, colors);
         r.triTextured(points, colors, uvPts, img);
-
-        // wireframe
-        // r.tri(points, {0, 0, 0});
       }
 
     }
     s += 0.01;
-
-    // Vector4f pts[3] = {{2,0,0,1}, {0,2,0,1}, {4,4,0,1}};
-    // r.triGradient(pts, {255,0,0}, {0,255,0}, {0,0,255});
   } while (mfb_wait_sync(window));
 
   return 0;
