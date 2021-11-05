@@ -95,12 +95,12 @@ int main()
   float s = 0;
 
   // Add directional lights
-  dirLight l1({0,0,-1, 0}, {255, 255, 255}); 
-  dirLight l2({0,-1,-1, 0}, {0, 0, 255});
-  dirLight l3({-1,-1,0, 0}, {0, 255, 0});
-  std::vector<dirLight> lights = {l1, l2, l3};
+  dirLight l1({0,0,1,0}, {255, 255, 255}); 
+  // dirLight l2({0,1,1,0}, {0, 0, 255});
+  // dirLight l3({1,1,0,0}, {0, 255, 0});
+  std::vector<dirLight> lights = {l1};
 
-  Vector4f cameraDir = {0, 0, -1, 0};
+  Vector4f cameraDir = {0, 0, 1, 0};
 
   std::vector<Vector4f> rotated = vertices;
   std::vector<Vector4f> rotatedNormals = vertexNormals;
@@ -114,10 +114,10 @@ int main()
 
     // Rotate model
     for (uint i = 0; i < vertices.size(); i++) {
-      Matrix4f rot = r.rotXMat(PI) * r.rotXMat(s);
+      Matrix4f rot = r.rotXMat(PI) * r.rotXMat(s) * r.rotYMat(s) * r.rotZMat(s);
 
       rotated[i] = rot * vertices[i]; // Rotate first
-      rotated[i] = r.transMat({0,20,200}) * rotated[i]; // Translate
+      rotated[i] = r.transMat({0,20,300}) * rotated[i]; // Translate
 
       rotatedNormals[i] = rot * vertexNormals[i]; // Rotate normals
     }
@@ -139,7 +139,9 @@ int main()
       n.normalize();
       
       // back-face culling
-      if(n.dot(cameraDir) >= 0 || !enableCulling) {
+      // If points are already in view space, P can be assumed to be (0, 0, 0), the origin.
+      // -v dot n >= 0;
+      if(n.dot(-cameraDir) >= 0 || !enableCulling) {
         r.triTextured(points, colors, uvPts, img);
       }
 

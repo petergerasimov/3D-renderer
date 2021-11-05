@@ -217,7 +217,7 @@ Color Renderer::dirLightColor(const Vector4f& normal, const std::vector<dirLight
     bool existsPositive = false;
 
     for (auto& light : lights) {
-        float intensity = normal.dot(light.getDir());
+        float intensity = normal.dot(-light.getDir());
         intensities.push_back(intensity);
         existsPositive |= (intensity > 0);
     }
