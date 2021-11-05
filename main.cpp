@@ -93,13 +93,13 @@ int main()
   float s = 0;
 
 
-  dirLight l1({0,0,-1}, {255, 0, 0}); 
+  dirLight l1({0,0,-1}, {255, 255, 255}); 
   dirLight l2({0,-1,-1}, {0, 0, 255});
   dirLight l3({-1,-1,0}, {0, 255, 0});
 
   Vector3f cameraDir = {0, 0, 1};
 
-  std::vector<dirLight> lights = {l1, l2, l3};
+  std::vector<dirLight> lights = {l1};
 
   std::vector<Vector4f> rotated = vertices;
   std::vector<Vector4f> rotatedNormals = vertexNormals;

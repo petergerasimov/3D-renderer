@@ -218,6 +218,7 @@ void Renderer::triTextured(Vector4f pts[3], Color cols[3], Vector2f uv[3], Image
         // if(pts[i][2] < camera.pos[2]) return;
         
         projected[i] = project(pts[i], w[i]);
+        // projected[i] = {(int)(pts[i][0]*5 + 600), (int)(pts[i][1]*5 + 300)};
 
         minX = std::min(minX, projected[i][0]);
         maxX = std::max(maxX, projected[i][0]);
@@ -230,8 +231,9 @@ void Renderer::triTextured(Vector4f pts[3], Color cols[3], Vector2f uv[3], Image
             Vector2i pt = {i, j};
             Vector3f bary = {0, 0, 0};
             barycentric(pt, projected, bary);
-
-            if( (bary(0) + bary(1) + bary(2)) <= 1.00001f ) {
+            int pos = j * width + i;
+            float pixelZ = w[0] * bary(0) + w[1] * bary(1) + w[2] * bary(2);
+            if( (bary(0) + bary(1) + bary(2)) <= 1.00001f && pixelZ > zBuffer[pos]) {
                 Color c = {0, 0, 0};
                 
                 Vector2f pUV = uv[0] * bary(0) + uv[1] * bary(1) + uv[2] * bary(2);
@@ -241,21 +243,12 @@ void Renderer::triTextured(Vector4f pts[3], Color cols[3], Vector2f uv[3], Image
                 // c = tc;
                 for(int k = 0; k < 3; k++) {
                     float tcf = tc.bgr[k] / 255.0f;
-                    c.bgr[k] = (cols[0].bgr[k] * bary(0) + cols[1].bgr[k] * bary(1) + cols[2].bgr[k] * bary(2)) * tcf;
+                    c.bgr[k] = cols[0].bgr[k] * bary(0) + cols[1].bgr[k] * bary(1) + cols[2].bgr[k] * bary(2);
+                    c.bgr[k] *= tcf;
                 }
 
-                // float pixelZ = pts[0](2) * bary(0) + pts[1](2) * bary(1) + pts[2](2) * bary(2);
-                float pixelZ = w[0] * bary(0) + w[1] * bary(1) + w[2] * bary(2);
-                
-                // std::cout << zBuffer[0] << std::endl;
-
-                int pos = j * width + i;
-
-                if (pixelZ > zBuffer[pos])
-				{
-					setPixel(i, j, c);
-					zBuffer[pos] = pixelZ;
-				}
+				setPixel(i, j, c);
+				zBuffer[pos] = pixelZ;
                 
             }
         }
