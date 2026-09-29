@@ -1,0 +1,9 @@
+build/
+renderer
+a.out
+*.o
+*.a
+*.so
+*.out
+
+out.bmp
