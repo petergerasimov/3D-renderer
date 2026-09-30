@@ -1,6 +1,13 @@
 CXX      = g++
 CXXFLAGS = -O3 -Ivendor/minifb/include
-LDLIBS   = -lX11 -lXrandr -lxkbcommon -lGL -lpthread
+
+ifeq ($(shell uname -s),Darwin)
+CXXFLAGS += -I$(shell brew --prefix)/include
+LDLIBS    = -framework Cocoa -framework Carbon -framework QuartzCore \
+            -framework Metal -framework MetalKit
+else
+LDLIBS    = -lX11 -lXrandr -lxkbcommon -lGL -lpthread
+endif
 
 MINIFB = build/minifb/libminifb.a
 SRCS   = main.cpp obj.cpp renderer.cpp

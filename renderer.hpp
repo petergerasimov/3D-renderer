@@ -2,6 +2,7 @@
 #define __RENDERER_HPP__
 
 #include <cstdint>
+#include <cstring>
 #include <functional>
 #include <vector>
 #include <cmath>
@@ -35,7 +36,7 @@ class Image
         std::vector<Color> imgData;
         Image(std::string path)
         {
-            std::string cmd = "convert " + path + " out.bmp";
+            std::string cmd = "convert " + path + " -alpha off -type TrueColor BMP3:out.bmp";
             if(system(cmd.c_str()) == -1) std::cout << "command failed";
             readBMP("./out.bmp");
             if(system("rm out.bmp") == -1) std::cout << "command failed";
@@ -67,7 +68,8 @@ class Image
             imgData.resize(newSz);
             for (size_t i = 0; i < newSz; i++)
             {   
-                imgData[i].i = *(int*)(&img[i * 3]);
+                imgData[i].i = 0;
+                std::memcpy(imgData[i].bgr, &img[i * 3], 3);
             }
         }
 };
